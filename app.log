@@ -1,0 +1,12 @@
+nohup: ignoring input
+
+> eduor@0.1.0 start
+> next start
+
+- ready started server on [::]:3000, url: http://localhost:3000
+[Error: ENOENT: no such file or directory, open '/var/www/html/.next/BUILD_ID'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/var/www/html/.next/BUILD_ID'
+}

@@ -1,0 +1,1016 @@
+"use client";
+import { useState } from 'react';
+import Select from 'react-select';
+
+const RegistrationTable = ({
+  registrations = [],
+  users = [],
+  loading,
+  onRefresh,
+}) => {
+  const [deletingId, setDeletingId] = useState(null);
+  const [editingRegistration, setEditingRegistration] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedRegistration, setSelectedRegistration] = useState(null);
+  const [followupNotes, setFollowupNotes] = useState([]);
+  const [newNote, setNewNote] = useState("");
+  const [loadingNotes, setLoadingNotes] = useState(false);
+  const [addingNote, setAddingNote] = useState(false);
+  const [updatingRegistration, setUpdatingRegistration] = useState(false);
+
+  // Edit modal state variables
+  const [editSelectedCategories, setEditSelectedCategories] = useState([]);
+  const [editSelectedSubjects, setEditSelectedSubjects] = useState([]);
+  const [editSelectedCourses, setEditSelectedCourses] = useState([]);
+  const [editAvailableSubjects, setEditAvailableSubjects] = useState([]);
+  const [editAvailableCourses, setEditAvailableCourses] = useState([]);
+
+  // Categories
+  const categories = [
+    { value: "Grade-1", label: "Grade 1" },
+    { value: "Grade-2", label: "Grade 2" },
+    { value: "Grade-3", label: "Grade 3" },
+    { value: "Grade-4", label: "Grade 4" },
+    { value: "Grade-5", label: "Grade 5" },
+    { value: "Grade-6", label: "Grade 6" },
+    { value: "Grade-7", label: "Grade 7" },
+    { value: "Grade-8", label: "Grade 8" },
+    { value: "Grade-9", label: "Grade 9 (Freshman Year)" },
+    { value: "Grade-10", label: "Grade 10 (Sophomore Year)" },
+    { value: "Grade-11", label: "Grade 11 (Junior Year)" },
+    { value: "Grade-12", label: "Grade 12 (Senior Year)" },
+    { value: "AP-Courses", label: "AP Courses" },
+    { value: "College-Tests", label: "College Tests" },
+  ];
+
+  const gradeSubjects = [
+    "English Language Arts",
+    "Mathematics",
+    "Science",
+    "Social Studies",
+    "Arts Education",
+    "Physical Education/Health",
+  ];
+
+  const apSubjectCategories = [
+    "English Language Arts",
+    "Mathematics",
+    "Science",
+    "GENERAL SUBJECTS",
+    "COMPUTER SCIENCE",
+  ];
+
+  const collegeTests = [
+    "SAT (Math + English)",
+    "SAT Math",
+    "SAT English",
+    "PSAT",
+    "ACT",
+  ];
+
+  // Helper function to parse JSON data
+  const parseJsonData = (jsonString) => {
+    if (!jsonString) return [];
+    try {
+      return JSON.parse(jsonString);
+    } catch {
+      return typeof jsonString === "string"
+        ? jsonString
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s)
+        : [jsonString];
+    }
+  };
+
+  const handleEditCategoryChange = (selectedOptions) => {
+    const categoryValues = selectedOptions
+      ? selectedOptions.map((option) => option.value)
+      : [];
+    setEditSelectedCategories(categoryValues);
+
+    let subjects = [];
+    const hasGrades = categoryValues.some((cat) => cat.startsWith("Grade-"));
+    const hasAPCourses = categoryValues.includes("AP-Courses");
+    const hasCollegeTests = categoryValues.includes("College-Tests");
+
+    if (hasGrades) {
+      subjects = [...subjects, ...gradeSubjects];
+    }
+    if (hasAPCourses) {
+      subjects = [...subjects, ...apSubjectCategories];
+    }
+    if (hasCollegeTests) {
+      subjects = [...subjects, ...collegeTests];
+    }
+
+    const uniqueSubjects = [...new Set(subjects)];
+    setEditAvailableSubjects(uniqueSubjects);
+
+    setEditSelectedSubjects((prevSubjects) =>
+      prevSubjects.filter((subject) => uniqueSubjects.includes(subject))
+    );
+
+    if (!hasAPCourses) {
+      setEditSelectedCourses([]);
+      setEditAvailableCourses([]);
+    }
+  };
+
+  const handleEditSubjectChange = async (selectedOptions) => {
+    const subjectValues = selectedOptions
+      ? selectedOptions.map((option) => option.value)
+      : [];
+    setEditSelectedSubjects(subjectValues);
+
+    const hasAPCourses = editSelectedCategories.includes("AP-Courses");
+
+    if (hasAPCourses && subjectValues.length > 0) {
+      await fetchEditAPCourses(subjectValues);
+    } else {
+      setEditAvailableCourses([]);
+      setEditSelectedCourses([]);
+    }
+  };
+
+  const fetchEditAPCourses = async (apSubjectCategories) => {
+    try {
+      let allCourses = [];
+
+      for (const subjectCategory of apSubjectCategories) {
+        const response = await fetch(
+          `/api/auth/courses/?parent_category=${encodeURIComponent(
+            "AP Courses"
+          )}&subject_category=${encodeURIComponent(subjectCategory)}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          allCourses = [...allCourses, ...data.courses];
+        }
+      }
+
+      const uniqueCourses = allCourses.filter(
+        (course, index, self) =>
+          index === self.findIndex((c) => c.id === course.id)
+      );
+
+      setEditAvailableCourses(uniqueCourses);
+
+      setEditSelectedCourses((prevSelected) =>
+        prevSelected.filter((courseId) =>
+          uniqueCourses.some((course) => course.id === courseId)
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching AP courses:", error);
+    }
+  };
+
+  const handleEditRegistration = async (registrationId) => {
+    try {
+      const response = await fetch(
+        `/api/auth/registrations/${registrationId}/`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const reg = data.registration;
+        
+        setEditingRegistration(reg);
+        
+        // Parse JSON strings to arrays
+        const categories = parseJsonData(reg.selected_categories);
+        const subjects = parseJsonData(reg.selected_subjects);
+        const courses = parseJsonData(reg.selected_courses);
+        
+        console.log('Editing registration - parsed data:', { categories, subjects, courses });
+        
+        setEditSelectedCategories(categories);
+        setEditSelectedSubjects(subjects);
+        setEditSelectedCourses(courses);
+        
+        // Calculate available subjects
+        let availSubjects = [];
+        const hasGrades = categories.some(cat => cat.startsWith('Grade-'));
+        const hasAPCourses = categories.includes('AP-Courses');
+        const hasCollegeTests = categories.includes('College-Tests');
+        
+        if (hasGrades) availSubjects = [...availSubjects, ...gradeSubjects];
+        if (hasAPCourses) availSubjects = [...availSubjects, ...apSubjectCategories];
+        if (hasCollegeTests) availSubjects = [...availSubjects, ...collegeTests];
+        
+        setEditAvailableSubjects([...new Set(availSubjects)]);
+        
+        // Fetch courses if AP Courses selected
+        if (hasAPCourses && subjects.length > 0) {
+          await fetchEditAPCourses(subjects);
+        }
+        
+        setShowEditModal(true);
+      }
+    } catch (error) {
+      console.error("Error fetching registration:", error);
+    }
+  }; 
+
+  const handleUpdateRegistration = async (e) => {
+    e.preventDefault();
+    setUpdatingRegistration(true);
+
+    try {
+      const response = await fetch(
+        `/api/auth/registrations/${editingRegistration.id}/`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...editingRegistration,
+            selectedCategories: editSelectedCategories,
+            selectedSubjects: editSelectedSubjects,
+            selectedCourses: editSelectedCourses,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        onRefresh();
+        setShowEditModal(false);
+        setEditingRegistration(null);
+        setEditSelectedCategories([]);
+        setEditSelectedSubjects([]);
+        setEditSelectedCourses([]);
+        setEditAvailableSubjects([]);
+        setEditAvailableCourses([]);
+        alert("Registration updated successfully!");
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to update registration");
+      }
+    } catch (error) {
+      alert("Error updating registration");
+      console.error("Update registration error:", error);
+    } finally {
+      setUpdatingRegistration(false);
+    }
+  };
+
+ tch(
+        `/api/auth/registrations/${registrationId}/`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok) {
+        onRefresh();
+      } else {
+        alert("Failed to delete registration");
+      }
+    } catch (error) {
+      alert("Error deleting registration");
+      console.error("Delete registration error:", error);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const openNotesModal = (registration) => {
+    setSelectedRegistration(registration);
+    setShowNotesModal(true);
+  };
+
+const handleConvertToStudent = async (registrationId, studentName) => {
+  if (
+    !window.confirm(
+      `Are you sure you want to convert "${studentName}" from registration to student?`
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `/api/auth/registrations/${registrationId}/convert-to-student/`,
+      {
+        method: "PUT",
+      }
+    );
+
+    if (response.ok) {
+      alert('Registration converted to student successfully!');
+      onRefresh();
+    } else {
+      const data = await response.json();
+      alert(data.error || 'Failed to convert registration');
+    }
+  } catch (error) {
+    alert("Error converting registration");
+    console.error("Convert to student error:", error);
+  }
+};
+
+
+  const openHistoryModal = async (registration) => {
+    setSelectedRegistration(registration);
+    setLoadingNotes(true);
+    setShowHistoryModal(true);
+
+    try {
+      const response = await fetch(`/api/auth/followups/${registration.id}/`);
+      if (response.ok) {
+        const data = await response.json();
+        setFollowupNotes(data.followups || []);
+      }
+    } catch (error) {
+      console.error("Error fetching followups:", error);
+    } finally {
+      setLoadingNotes(false);
+    }
+  };
+
+  const handleAddNote = async (e) => {
+    e.preventDefault();
+    if (!newNote.trim()) return;
+
+    setAddingNote(true);
+    try {
+      const response = await fetch("/api/auth/add-followup/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          registrationId: selectedRegistration.id,
+          notes: newNote,
+        }),
+      });
+
+      if (response.ok) {
+        setNewNote("");
+        setShowNotesModal(false);
+        alert("Follow-up note added successfully!");
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to add note");
+      }
+    } catch (error) {
+      alert("Error adding note");
+      console.error("Add note error:", error);
+    } finally {
+      setAddingNote(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="table-loading">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="data-table">
+        <div className="table-responsive">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Parent Name</th>
+                <th>Student Name</th>
+                <th>Lives In</th>
+                <th>Grade</th>
+                <th>School</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Assigned To</th>
+                <th>Categories</th>
+                <th>Subjects</th>
+                <th>Courses</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!registrations || registrations.length === 0 ? (
+                <tr>
+                  <td colSpan="14" className="text-center">
+                    No registrations found
+                  </td>
+                </tr>
+              ) : (
+                registrations.map((registration, index) => (
+                  <tr key={registration.id}>
+                    <td>{index + 1}</td>
+                    <td>{registration.parent_name || "N/A"}</td>
+                    <td>{registration.student_name || "N/A"}</td>
+                    <td>{registration.lives_in || "N/A"}</td>
+                    <td>{registration.student_grade || "N/A"}</td>
+                    <td>{registration.school_name || "N/A"}</td>
+                    <td>{registration.phone || "N/A"}</td>
+                    <td>{registration.email || "N/A"}</td>
+                    <td>{registration.assignee_name || "Unassigned"}</td>
+                    <td>
+                      {registration.selected_categories &&
+                      Array.isArray(registration.selected_categories) ? (
+                        registration.selected_categories.map(
+                          (category, index) => (
+                            <span
+                              key={index}
+                              className="badge bg-secondary me-1 mb-1"
+                            >
+                              {category}
+                            </span>
+                          )
+                        )
+                      ) : (
+                        <span className="text-muted">-</span>
+                      )}
+                    </td>
+                    <td>
+                      {registration.selected_subjects &&
+                      Array.isArray(registration.selected_subjects) ? (
+                        registration.selected_subjects.map((subject, index) => (
+                          <span key={index} className="badge bg-info me-1 mb-1">
+                            {subject}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-muted">-</span>
+                      )}
+                    </td>
+                    <td>
+                      {registration.course_details &&
+                      registration.course_details.length > 0 ? (
+                        <div>
+                          {registration.course_details.map((course) => (
+                            <span
+                              key={course.id}
+                              className="badge bg-primary me-1 mb-1"
+                            >
+                              {course.name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted">No specific courses</span>
+                      )}
+                    </td>
+                    <td>
+                      {registration.created_at
+                        ? new Date(registration.created_at).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="btn btn-sm btn-outline-primary tooltip-btn"
+                          title="Edit Registration"
+                          onClick={() =>
+                            handleEditRegistration(registration.id)
+                          }
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-success tooltip-btn"
+                          title="Add Follow-up Note"
+                          onClick={() => openNotesModal(registration)}
+                        >
+                          <i className="fas fa-sticky-note"></i>
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-info tooltip-btn"
+                          title="View Follow-up History"
+                          onClick={() => openHistoryModal(registration)}
+                        >
+                          <i className="fas fa-eye"></i>
+                        </button>
+ {registration.status === 0 && (
+      <button
+        className="btn btn-sm btn-outline-warning tooltip-btn"
+        title="Convert to Student"
+        onClick={() =>
+          handleConvertToStudent(
+            registration.id,
+            registration.student_name
+          )
+        }
+      >
+        <i className="fas fa-user-graduate"></i>
+      </button>
+    )}
+                        <button
+                          className="btn btn-sm btn-outline-danger tooltip-btn"
+                          title="Delete Registration"
+                          onClick={() =>
+                            handleDeleteRegistration(
+                              registration.id,
+                              registration.student_name
+                            )
+                          }
+                          disabled={deletingId === registration.id}
+                        >
+                          {deletingId === registration.id ? (
+                            <i className="fas fa-spinner fa-spin"></i>
+                          ) : (
+                            <i className="fas fa-trash"></i>
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showEditModal && editingRegistration && (
+        <div className="modal-overlay">
+          <div className="modal-content large-modal">
+            <div className="modal-header">
+              <h5>Edit Registration</h5>
+              <button onClick={() => setShowEditModal(false)}>×</button>
+            </div>
+            <form onSubmit={handleUpdateRegistration}>
+              <div className="modal-body">
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label>Parent Name *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editingRegistration.parent_name || ""}
+                        onChange={(e) =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            parent_name: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label>Student Name *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editingRegistration.student_name || ""}
+                        onChange={(e) =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            student_name: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label>Lives In</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editingRegistration.lives_in || ""}
+                        onChange={(e) =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            lives_in: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label>Contacted Via</label>
+                      <select
+                        className="form-control"
+                        value={editingRegistration.contacted_via || ""}
+                        onChange={(e) =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            contacted_via: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">Select Method</option>
+                        <option value="Phone">Phone</option>
+                        <option value="Email">Email</option>
+                        <option value="WhatsApp">WhatsApp</option>
+                        <option value="In Person">In Person</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label>Student Grade</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editingRegistration.student_grade || ""}
+                        onChange={(e) =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            student_grade: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label>School Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editingRegistration.school_name || ""}
+                        onChange={(e) =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            school_name: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label>Phone</label>
+                      <input
+                        type="tel"
+                        className="form-control"
+                        value={editingRegistration.phone || ""}
+                        onChange={(e) =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            phone: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label>Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={editingRegistration.email || ""}
+                        onChange={(e) =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            email: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label>Assign To</label>
+                      <select
+                        className="form-control"
+                        value={editingRegistration.assignee_id || ""}
+                        onChange={(e) =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            assignee_id: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">Select User</option>
+                        {users && users.length > 0 ? (
+                          users.map((user) => (
+                            <option key={user.id} value={user.id}>
+                              {user.name}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="">Loading users...</option>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                      <label>Referred By</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editingRegistration.referred_by || ""}
+                        onChange={(e) =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            referred_by: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <div className="form-group">
+                      <label>Notes</label>
+                      <textarea
+                        className="form-control"
+                        rows="3"
+                        value={editingRegistration.notes || ""}
+                        onChange={(e) =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            notes: e.target.value,
+                          })
+                        }
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  {/* Categories Selection */}
+                  <div className="col-12">
+                    <div className="form-group">
+                      <label>
+                        <strong>Step 1: Select Categories *</strong>
+                        <br />
+                        <small className="text-muted">
+                          Choose Grades, AP Courses, or College Tests
+                        </small>
+                      </label>
+                      <Select
+                        isMulti
+                        value={editSelectedCategories.map((cat) => ({
+                          value: cat,
+                          label:
+                            categories.find((c) => c.value === cat)?.label ||
+                            cat,
+                        }))}
+                        options={categories}
+                        onChange={handleEditCategoryChange}
+                        placeholder="Select categories..."
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Subjects Selection */}
+                  {editAvailableSubjects.length > 0 && (
+                    <div className="col-12">
+                      <div className="form-group">
+                        <label>
+                          <strong>Step 2: Select Subjects *</strong>
+                          <br />
+                          <small className="text-muted">
+                            {editSelectedCategories.includes("AP-Courses")
+                              ? "For AP Courses: Select subject categories, then choose specific courses in Step 3"
+                              : "For Grades/College Tests: These are your final selections"}
+                          </small>
+                        </label>
+                        <Select
+                          isMulti
+                          value={editSelectedSubjects.map((subject) => ({
+                            value: subject,
+                            label: subject,
+                          }))}
+                          options={editAvailableSubjects.map((subject) => ({
+                            value: subject,
+                            label: subject,
+                          }))}
+                          onChange={handleEditSubjectChange}
+                          placeholder="Select subjects..."
+                          className="react-select-container"
+                          classNamePrefix="react-select"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Courses Selection (AP only) */}
+                  {editSelectedCategories.includes("AP-Courses") &&
+                    editSelectedSubjects.length > 0 &&
+                    editAvailableCourses.length > 0 && (
+                      <div className="col-12">
+                        <div className="form-group">
+                          <label>
+                            <strong>
+                              Step 3: Select Specific AP Courses *
+                            </strong>
+                            <br />
+                            <small className="text-muted">
+                              Choose the exact AP courses the student needs
+                            </small>
+                          </label>
+                          <Select
+                            isMulti
+                            value={editSelectedCourses
+                              .map((courseId) => {
+                                const course = editAvailableCourses.find(
+                                  (c) => c.id === courseId
+                                );
+                                return course
+                                  ? {
+                                      value: course.id,
+                                      label: course.course_name,
+                                    }
+                                  : null;
+                              })
+                              .filter(Boolean)}
+                            options={editAvailableCourses.map((course) => ({
+                              value: course.id,
+                              label: course.course_name,
+                            }))}
+                            onChange={(selectedOptions) => {
+                              setEditSelectedCourses(
+                                selectedOptions
+                                  ? selectedOptions.map((opt) => opt.value)
+                                  : []
+                              );
+                            }}
+                            placeholder="Select specific AP courses..."
+                            className="react-select-container"
+                            classNamePrefix="react-select"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Selection Summary */}
+                  {(editSelectedCategories.length > 0 ||
+                    editSelectedSubjects.length > 0 ||
+                    editSelectedCourses.length > 0) && (
+                    <div className="col-12">
+                      <div className="form-group">
+                        <label>
+                          <strong>Selection Summary:</strong>
+                        </label>
+                        <div className="alert alert-info">
+                          <div>
+                            <strong>Categories:</strong>{" "}
+                            {editSelectedCategories.join(", ") || "None"}
+                          </div>
+                          <div>
+                            <strong>Subjects:</strong>{" "}
+                            {editSelectedSubjects.join(", ") || "None"}
+                          </div>
+                          {editSelectedCourses.length > 0 && (
+                            <div>
+                              <strong>AP Courses:</strong>{" "}
+                              {editAvailableCourses
+                                .filter((c) =>
+                                  editSelectedCourses.includes(c.id)
+                                )
+                                .map((c) => c.course_name)
+                                .join(", ")}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={updatingRegistration}
+                >
+                  {updatingRegistration ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Registration"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Note Modal */}
+      {showNotesModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5>Add Follow-up Note</h5>
+              <button onClick={() => setShowNotesModal(false)}>×</button>
+            </div>
+            <form onSubmit={handleAddNote}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>
+                    <strong>Registration:</strong>{" "}
+                    {selectedRegistration?.student_name}
+                  </label>
+                </div>
+                <div className="form-group">
+                  <label>Follow-up Notes</label>
+                  <textarea
+                    className="form-control"
+                    rows="4"
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                    placeholder="Enter your follow-up notes here..."
+                    required
+                  ></textarea>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowNotesModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={addingNote}
+                >
+                  {addingNote ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      Adding...
+                    </>
+                  ) : (
+                    "Add Note"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* History Modal */}
+      {showHistoryModal && (
+        <div className="modal-overlay">
+          <div className="modal-content large-modal">
+            <div className="modal-header">
+              <h5>Follow-up History - {selectedRegistration?.student_name}</h5>
+              <button onClick={() => setShowHistoryModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              {loadingNotes ? (
+                <div className="text-center">
+                  <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              ) : followupNotes.length === 0 ? (
+                <p className="text-center">No follow-up notes found.</p>
+              ) : (
+                <div className="followup-timeline">
+                  {followupNotes.map((note) => (
+                    <div key={note.id} className="timeline-item">
+                      <div className="timeline-marker"></div>
+                      <div className="timeline-content">
+                        <div className="timeline-header">
+                          <strong>{note.user_name}</strong>
+                          <span className="timeline-date">
+                            {new Date(note.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="timeline-body">{note.notes}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowHistoryModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default RegistrationTable;
