@@ -47,7 +47,6 @@ export default function RegistrationsPage() {
       <div className="page-header">
         <h1>Students Management</h1>
       </div>
-
       <StudentTable
         registrations={registrations}
         users={users}

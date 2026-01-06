@@ -659,6 +659,46 @@ const handleGenerateInvoiceFromModal = async () => {
       sortable: true,
       width: '130px',
     },
+{
+  name: 'Invoices',
+  cell: row => {
+    if (!row.invoices || row.invoices.length === 0) {
+      return <span className="text-muted" style={{fontSize: '11px'}}>No invoices</span>;
+    }
+
+    return (
+      <div className="dropdown">
+        <button
+          className="btn btn-sm btn-outline-success dropdown-toggle"
+          type="button"
+          id={`invoiceDropdown-${row.id}`}
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+          style={{ fontSize: '11px' }}
+        >
+          <i className="fas fa-file-invoice me-1"></i>
+          {row.invoices.length}
+        </button>
+        <ul className="dropdown-menu" aria-labelledby={`invoiceDropdown-${row.id}`}>
+          {row.invoices.map((invoice, idx) => (
+            <li key={idx}>
+              <button
+                className="dropdown-item"
+                onClick={() => window.open(invoice.pdf_path, '_blank')}
+                style={{ fontSize: '12px', cursor: 'pointer' }}
+              >
+                <i className="fas fa-file-pdf me-2 text-danger"></i>
+                {invoice.invoice_number}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  },
+  width: '120px',
+  ignoreRowClick: true,
+},
     {
       name: 'Categories',
       cell: row => (

@@ -9,26 +9,42 @@ async function getStudentsHandler(request) {
     console.log('Fetching students from database...');
     console.log('Authenticated admin user:', request.user.email, 'Role:', request.user.roleCode);
     
-    // Only fetch students where status = 0 AND is_active = 0
+    // Fetch students with their invoices
     const result = await query(`
       SELECT 
         s.*,
-        u.name as assignee_name
+        u.name as assignee_name,
+        GROUP_CONCAT(
+          CONCAT(i.invoice_number, '|', i.pdf_path) 
+          ORDER BY i.created_at DESC 
+          SEPARATOR '||'
+        ) as invoices_data
       FROM students s
       LEFT JOIN users u ON s.assignee_id = u.id
+      LEFT JOIN invoices i ON s.id = i.student_id AND i.is_active = 0
       WHERE s.status = 0 AND s.is_active = 0
+      GROUP BY s.id
       ORDER BY s.id DESC
     `);
     
     console.log('Active students fetched:', result.length);
     
-    // Process each student to parse JSON fields
+    // Process each student to parse JSON fields and invoices
     const processedStudents = await Promise.all(
       result.map(async (student) => {
         // Parse JSON strings back to arrays
         const categories = student.selected_categories ? JSON.parse(student.selected_categories) : [];
         const subjects = student.selected_subjects ? JSON.parse(student.selected_subjects) : [];
         const courseIds = student.selected_courses ? JSON.parse(student.selected_courses) : [];
+        
+        // Parse invoices
+        let invoices = [];
+        if (student.invoices_data) {
+          invoices = student.invoices_data.split('||').map(inv => {
+            const [invoice_number, pdf_path] = inv.split('|');
+            return { invoice_number, pdf_path };
+          });
+        }
         
         // Fetch course details if there are course IDs
         let courses = [];
@@ -53,7 +69,8 @@ async function getStudentsHandler(request) {
           selected_categories: categories,
           selected_subjects: subjects,
           selected_courses: courseIds,
-          course_details: courses
+          course_details: courses,
+          invoices: invoices // Add invoices to student object
         };
       })
     );

@@ -13,7 +13,8 @@ const AdminLayout = ({ children }) => {
     { name: 'Home', path: '/admin', icon: 'fas fa-home' },
     { name: 'Users', path: '/admin/users', icon: 'fas fa-users' },
     { name: 'Registrations', path: '/admin/registrations', icon: 'fas fa-clipboard-list' },
-    { name: 'Students', path: '/admin/students', icon: 'fas fa-user-graduate'}
+    { name: 'Students', path: '/admin/students', icon: 'fas fa-user-graduate'},
+{ name: 'Rate Card', path: '/admin/rate-cards', icon: 'fas fa-user-graduate'}
   ];
 
   return (
