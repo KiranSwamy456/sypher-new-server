@@ -1,7 +1,7 @@
 // File: app/api/students/route.js
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAdmin } from '@/lib/auth';
+import { withAdmin } from '@/lib/nextAuthMiddleware';
 
 // GET all students (only active students with status = 0 and is_active = 0)
 async function getStudentsHandler(request) {
@@ -92,4 +92,4 @@ async function getStudentsHandler(request) {
   }
 }
 
-export const GET = requireAdmin(getStudentsHandler);
+export const GET = withAdmin(getStudentsHandler);

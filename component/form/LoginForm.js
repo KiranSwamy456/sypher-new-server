@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 const LoginForm = () => {
@@ -20,94 +21,46 @@ const LoginForm = () => {
     if (error) setError('');
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-  //   setError('');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-  //   try {
-  //     const response = await fetch('/api/auth/login', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify(formData)
-  //     });
+    try {
+      // Use NextAuth signIn with credentials provider
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false, // Don't redirect automatically
+        callbackUrl: '/admin',
+      });
 
-  //     const data = await response.json();
+      console.log('SignIn result:', result);
 
-  //     if (response.ok) {
-  //       console.log('Login successful, user data:', data.user);
-  //       console.log('Role code:', data.user.roleCode);
-  //       localStorage.setItem('user', JSON.stringify(data.user));
-        
-  //       // Only allow admin access
-  //       if (data.user.roleCode === 602) {
-  //           console.log('Attempting redirect to /admin');
-  //           router.push('/admin');
-  //           // Force page refresh to ensure AuthContext picks up the user
-  //           setTimeout(() => {
-  //             window.location.reload();
-  //           }, 100);
-  //         }else {
-  //           setError('Access denied. Admin privileges required.');
-  //           return;
-  //         }
-  //     } else {
-  //       setError(data.error || 'Login failed');
-  //     }
-  //   } catch (error) {
-  //     setError('Network error. Please try again.');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
-
-  try {
-    const response = await fetch('/api/auth/login/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData)
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      console.log('Login successful, user data:', data.user);
-      console.log('Role code:', data.user.roleCode);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      // Allow admin (602), super admin (603) access to panel
-      if ([602, 603].includes(data.user.roleCode)) {
-        console.log('Attempting redirect to /admin');
-        // Use window.location.href for immediate redirect instead of router.push + reload
-        window.location.href = '/admin';
-      } else {
-        // Show specific error message based on role
-        const roleMessages = {
-          601: 'Regular users cannot access admin panel.',
-          604: 'Invoice users cannot access admin panel.'
+      if (result?.error) {
+        // Map error messages
+        const errorMap = {
+          'Email and password required': 'Please enter both email and password',
+          'Invalid credentials': 'Invalid email or password',
+          'Account inactive': 'Your account is inactive. Please contact support.',
+          'Admin access required': 'You do not have admin access',
         };
-        const errorMsg = roleMessages[data.user.roleCode] || 'Access denied. Admin privileges required.';
-        setError(errorMsg);
-        return;
+
+        const errorMessage = errorMap[result.error] || result.error || 'Login failed';
+        setError(errorMessage);
+        alert(`❌ Login Failed\n\n${errorMessage}`);
+      } else if (result?.ok) {
+        // Login successful, redirect to admin
+        console.log('Login successful, redirecting to /admin');
+        window.location.href = '/admin';
       }
-    } else {
-      setError(data.error || 'Login failed');
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    setError('Network error. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
 return(

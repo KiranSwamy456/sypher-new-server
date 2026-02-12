@@ -1,6 +1,7 @@
 // app/layout.js
 import { EduorProvider } from "@/context/EduorContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { AuthSessionProvider } from "@/context/SessionProvider";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@/public/css/all.min.css";
 import "slick-carousel/slick/slick.css";
@@ -20,15 +21,17 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <EduorProvider>
-        <AuthProvider>
-          <body>
-            {children}
-            <StickySocialMedia />
-            <ToastContainer />
-          </body>
-        </AuthProvider>
-      </EduorProvider>
+      <AuthSessionProvider>
+        <EduorProvider>
+          <AuthProvider>
+            <body>
+              {children}
+              <StickySocialMedia />
+              <ToastContainer />
+            </body>
+          </AuthProvider>
+        </EduorProvider>
+      </AuthSessionProvider>
     </html>
   );
 }

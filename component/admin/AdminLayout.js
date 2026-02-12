@@ -1,13 +1,17 @@
 "use client";
 import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const AdminLayout = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { user, logout } = useAuth();
+  const { data: session } = useSession();
   const pathname = usePathname();
+
+  const handleLogout = async () => {
+    await signOut({ redirect: true, callbackUrl: '/sign-in' });
+  };
 
   const menuItems = [
     { name: 'Home', path: '/admin', icon: 'fas fa-home' },
@@ -71,12 +75,12 @@ const AdminLayout = ({ children }) => {
               <div className="dropdown">
                 <button className="profile-btn dropdown-toggle">
                   <i className="fas fa-user-circle"></i>
-                  <span>{user?.name}</span>
+                  <span>{session?.user?.name}</span>
                   <i className="fas fa-chevron-down"></i>
                 </button>
                 <div className="dropdown-menu">
                   <button 
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="dropdown-item logout-btn"
                   >
                     <i className="fas fa-sign-out-alt"></i> Logout

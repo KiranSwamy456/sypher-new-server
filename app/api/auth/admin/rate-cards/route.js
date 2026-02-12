@@ -1,7 +1,7 @@
 // File: app/api/auth/admin/rate-cards/route.js
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAdmin } from '@/lib/auth';
+import { withAdmin } from '@/lib/nextAuthMiddleware';
 
 async function getRateCardsHandler(request) {
   try {
@@ -29,4 +29,4 @@ async function getRateCardsHandler(request) {
   }
 }
 
-export const GET = requireAdmin(getRateCardsHandler);
+export const GET = withAdmin(getRateCardsHandler);

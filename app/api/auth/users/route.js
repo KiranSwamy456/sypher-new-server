@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAdmin } from '@/lib/auth';
+import { withAdmin } from '@/lib/nextAuthMiddleware';
 
 async function getUsersHandler(request) {
   try {
@@ -32,4 +32,4 @@ async function getUsersHandler(request) {
   }
 }
 
-export const GET = requireAdmin(getUsersHandler);
+export const GET = withAdmin(getUsersHandler);

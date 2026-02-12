@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAdmin } from '@/lib/auth';
+import { withAdmin } from '@/lib/nextAuthMiddleware';
 
 async function getUserHandler(request, context) {
   try {
@@ -179,6 +179,6 @@ async function deleteUserHandler(request, context) {
   }
 }
 
-export const GET = requireAdmin(getUserHandler);
-export const PUT = requireAdmin(updateUserHandler);
-export const DELETE = requireAdmin(deleteUserHandler);
+export const GET = withAdmin(getUserHandler);
+export const PUT = withAdmin(updateUserHandler);
+export const DELETE = withAdmin(deleteUserHandler);

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAdmin } from '@/lib/auth';
+import { withAdmin } from '@/lib/nextAuthMiddleware';
 
 async function getRolesHandler(request) {
   try {
@@ -29,4 +29,4 @@ async function getRolesHandler(request) {
   }
 }
 
-export const GET = requireAdmin(getRolesHandler);
+export const GET = withAdmin(getRolesHandler);

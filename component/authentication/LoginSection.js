@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import LoginForm from "../form/LoginForm";
+import GoogleLoginButton from "./GoogleLoginButton";
 import Link from "next/link";
 
 const LoginSection = () => {
@@ -12,6 +13,15 @@ const LoginSection = () => {
             <div className="tf__login_area">
               <h2>Welcome to Sypher!</h2>
               <p>sign in to continue</p>
+              
+              <div className="mb-3">
+                <GoogleLoginButton />
+              </div>
+              
+              <div className="text-center my-3">
+                <span className="text-muted">or</span>
+              </div>
+              
               <LoginForm />
               
             </div>

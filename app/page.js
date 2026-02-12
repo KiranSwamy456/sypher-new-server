@@ -1,45 +1,3 @@
-// import AboutSection from "@/component/about/AboutSection";
-// import ActivitySection from "@/component/activity/ActivitySection";
-// import BannerSection from "@/component/banner/BannerSection";
-// import BlogSection from "@/component/blog/BlogSection";
-// import CategorySection from "@/component/category/CategorySection";
-// import EventSection from "@/component/event/EventSection";
-// import FaqSection from "@/component/faq/FaqSection";
-// import FooterSection from "@/component/footer/FooterSection";
-// import VideoModal from "@/component/modal/VideoModal";
-// import NavbarSection from "@/component/navbar/NavbarSection";
-// import TestimonialSection from "@/component/testimonial/TestimonialSection";
-// import ScrollToTopButton from "@/component/utils/ScrollToTopButton";
-// import VideoSection from "@/component/video/VideoSection";
-// import WorkSection from "@/component/work/WorkSection";
-
-// export const metadata = {
-//   title: "Sypher Home Page 1",
-//   description: "Developed by Azizur Rahman",
-// };
-
-// export default function Home() {
-//   return (
-//     <>
-//       <NavbarSection style="" logo="images/logo.png" />
-//       <BannerSection />
-//       <CategorySection />
-//       <AboutSection />
-//       <EventSection section="tf__event mt_95" startIndex={0} endIndex={4} />
-//       <FaqSection img="images/faq_img.jpg" />
-//       <WorkSection />
-//       <TestimonialSection />
-//       <ActivitySection />
-//       <VideoSection />
-//       <BlogSection />
-//       <FooterSection />
-//       <VideoModal />
-//       <ScrollToTopButton style="" />
-//     </>
-//   );
-// }
-
-
 import AboutSection3 from "@/component/about/AboutSection3";
 import ActivitySection2 from "@/component/activity/ActivitySection2";
 import BannerSection3 from "@/component/banner/BannerSection3";
@@ -76,14 +34,6 @@ export default function Home3() {
       <BannerSection3 />
       <CategorySection3 />
       <AboutSection3 style="about_3" />
-      {/* <ContactSection /> */}
-      {/* <CourseSection2 /> */}
-      {/* <CounterSection /> */}
-      {/* <TeamSection style="tf__team_3 pt_250 pb_100" /> */}
-      {/* <ContactSection2 /> */}
-      {/* <ActivitySection2 style="tf__activities_3 tf__activities_slider_area mt_100 pt_95 pb_100" /> */}
-      {/* <BlogSection2 /> */}
-      {/* <FooterSection2 style="tf__footer_3" logo="images/footer_logo3.png" /> */}
       <FooterSection2 style="tf__footer_3" />
       <VideoModal />
       <ScrollToTopButton style="style-3" />

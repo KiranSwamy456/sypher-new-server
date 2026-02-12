@@ -1,21 +1,31 @@
 "use client";
-import { useAuth } from '@/context/AuthContext';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import AdminLayout from '@/component/admin/AdminLayout';
 import '@/styles/admin.css';
 
 export default function AdminLayoutWrapper({ children }) {
-  const { user, loading } = useAuth();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
-useEffect(() => {
-  if (!loading && (!user || ![602, 603].includes(user.roleCode))) {
-    router.push('/sign-in');
-  }
-}, [user, loading, router]);
+  useEffect(() => {
+    // If not authenticated, redirect to sign-in
+    if (status === "unauthenticated") {
+      router.push('/sign-in');
+    }
+    
+    // If authenticated, check role
+    if (status === "authenticated") {
+      const allowedRoles = [602, 603]; // Admin and Super Admin
+      if (!allowedRoles.includes(session?.user?.roleCode)) {
+        router.push('/sign-in');
+      }
+    }
+  }, [status, session, router]);
 
-  if (loading) {
+  // Loading state
+  if (status === "loading") {
     return (
       <div className="loading-spinner" style={{ 
         display: 'flex', 
@@ -30,7 +40,13 @@ useEffect(() => {
     );
   }
 
-  if (!user || user.roleCode !== 602) {
+  // Not authenticated
+  if (status === "unauthenticated") {
+    return null;
+  }
+
+  // Authenticated but wrong role
+  if (![602, 603].includes(session?.user?.roleCode)) {
     return null;
   }
 

@@ -284,4 +284,4 @@ async function generateInvoiceHandler(request) {
   }
 }
 
-export const POST = requireAdmin(generateInvoiceHandler);
+export const POST = withAdmin(generateInvoiceHandler);
