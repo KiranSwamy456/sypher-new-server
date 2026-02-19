@@ -63,62 +63,77 @@ const LoginForm = () => {
   };
 
 
-return(
-   <form onSubmit={handleSubmit}>
+  return (
+    <form onSubmit={handleSubmit}>
+
       {error && (
         <div className="alert alert-danger mb-3" role="alert">
           {error}
         </div>
       )}
-      
-      <div className="row">
-        <div className="col-xl-12">
-          <div className="tf__login_imput">
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Email"
-              required
-              disabled={loading}
-            />
-          </div>
-        </div>
-        <div className="col-xl-12">
-          <div className="tf__login_imput">
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Password"
-              required
-              disabled={loading}
-            />
-          </div>
-        </div>
-        <div className="col-xl-12">
-          <div className="tf__login_imput">
-            <button 
-              type="submit" 
-              className="common_btn"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                  Signing In...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </button>
-          </div>
-        </div>
+
+      {/* Email */}
+      <div className="mb-3">
+        <input
+          type="email"
+          name="email"
+          className="form-control custom-input"
+          placeholder="Username"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          disabled={loading}
+        />
       </div>
+
+      {/* Password */}
+      <div className="mb-3">
+        <input
+          type="password"
+          name="password"
+          className="form-control custom-input"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          disabled={loading}
+        />
+      </div>
+
+      {/* Remember + Forgot */}
+      {/* <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            id="rememberMe"
+          />
+          <label className="form-check-label small" htmlFor="rememberMe">
+            Remember Me
+          </label>
+        </div>
+
+        <a href="#" className="small text-muted">
+          Password?
+        </a>
+      </div> */}
+
+      {/* Submit Button */}
+      <button
+        type="submit"
+        className="btn login-btn w-100"
+        disabled={loading}
+      >
+        {loading ? (
+          <>
+            <span className="spinner-border spinner-border-sm me-2"></span>
+            Signing In...
+          </>
+        ) : (
+          "Login"
+        )}
+      </button>
+
     </form>
   );
 };

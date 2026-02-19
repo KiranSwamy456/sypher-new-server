@@ -11023,3 +11023,131 @@ section.tf__counter_3 {
     display: none !important;
   }
 }
+
+.left-panel {
+  position: relative;
+  background: url("../images//about_2_img_1.jpg") no-repeat;
+  background-size: cover;
+  background-position: center;
+  padding: 60px;
+  overflow: hidden;
+}
+
+/* Transparent Pink Layer */
+.left-overlay {
+  position: absolute;
+  inset: 0;
+  /* background: rgba(255, 0, 80, 0.85); */
+  background: #d19d0bb5;
+  /* transparency */
+  z-index: 1;
+}
+
+/* Content above overlay */
+.left-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 32px;
+}
+
+.welcome-box {
+  max-width: 400px;
+}
+
+.welcome-box h1 {
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.welcome-box p {
+  font-size: 14px;
+  margin-top: 15px;
+}
+
+.copyright {
+  font-size: 13px;
+}
+
+/* RIGHT PANEL */
+.right-panel {
+  background-color: #f2f2f2;
+}
+
+.login-wrapper {
+  width: 100%;
+  max-width: 380px;
+}
+
+.signin-title {
+  color: #1c3faa;
+  font-weight: 600;
+}
+
+/* INPUT STYLE */
+.custom-input {
+  height: 48px;
+  border-radius: 6px;
+  background: #e9ecef;
+  border: none;
+}
+
+
+
+/* Divider */
+.divider span {
+  font-size: 13px;
+  color: #777;
+}
+
+/* Input Style */
+.custom-input {
+  height: 50px;
+  background: #e9ecef;
+  border: none;
+  border-radius: 6px;
+  padding-left: 15px;
+}
+
+.custom-input:focus {
+  background: #e9ecef;
+  box-shadow: none;
+}
+
+/* Login Button */
+.login-btn {
+  height: 50px;
+  background-color: #d49e13;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+}
+
+.login-btn:hover {
+  background-color: #d49e13;
+}
+
+.google-btn {
+  border: 1px solid #ced4da;
+  background: #fff;
+  border-radius: 6px;
+  height: 44px;
+  width: 150px;
+  /* adjust if needed */
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.google-btn:hover {
+  background: #f8f9fa;
+}
