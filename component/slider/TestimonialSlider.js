@@ -1,6 +1,6 @@
 import { testimonialData } from "@/data/Data";
 import React from "react";
-import Slider from "react-slick"; //HI
+import Slider from "react-slick"; 
 
 const TestimonialSlider = () => {
   return (
