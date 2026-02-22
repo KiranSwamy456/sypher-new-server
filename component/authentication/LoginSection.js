@@ -15,7 +15,7 @@ export default function LoginSection() {
             <h2 className="logo">Sypher Academy</h2>
 
             <div className="welcome-box">
-              <h1 style={{ color:"#0f2239"}}>Welcome to Sypher Academy!</h1>
+              <h1 style={{ color:"#fff"}}>Welcome to Sypher Academy!</h1>
               <p>
                 Our scientifically-backed, personalized learning pathways are designed to help every student reach their full potential. All at an affordable cost for parents.
               </p>
@@ -28,7 +28,7 @@ export default function LoginSection() {
         </div>
 
         {/* RIGHT SIDE */}
-        <div className="col-lg-6 right-panel d-flex align-items-center justify-content-center">
+        {/*  <div className="col-lg-6 right-panel d-flex align-items-center justify-content-center">
           <div className="login-wrapper">
 
             <div className="text-end small mb-4">
@@ -45,6 +45,33 @@ export default function LoginSection() {
 
             <div className="social-buttons d-flex justify-content-between">
               
+              <GoogleLoginButton />
+            </div>
+
+          </div>
+        </div>  */}
+
+        <div className="col-lg-6 right-panel d-flex align-items-center justify-content-center">
+          <div className="login-wrapper">
+
+            {/* Signup text */}
+            <div className="small mb-4 bold">
+              Need an account? <a href="#">Signup here</a>
+            </div>
+
+            {/* Title */}
+            <h2 className="signin-title mb-4">Sign in</h2>
+
+            {/* Login Form */}
+            <LoginForm />
+
+            {/* Divider */}
+            <div className="divider my-4 text-center">
+              <span>OR</span>
+            </div>
+
+            {/* Social Buttons */}
+            <div className="social-buttons">
               <GoogleLoginButton />
             </div>
 
