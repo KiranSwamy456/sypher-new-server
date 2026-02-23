@@ -46,6 +46,19 @@ const NavigationSection = ({ position, btnPosition, navRef }) => {
         <li className="nav-item">
           <Navlink href="/contact">contact</Navlink>
         </li>
+        {/* New Login Button */}
+        <li className="nav-item">
+          <a className="nav-link common_btn" href="/sign-in">
+            Login
+          </a>
+        </li>
+        {/* New Register Button 
+        <li className="nav-item">
+          <a className="nav-link common_btn" href="/register">
+            Register
+          </a>
+        </li> */}
+        {/* Existing Book a Free Demo Button */}
         {btnPosition ? null : (
           <li className="nav-item">
             <a className="nav-link common_btn" href="/register">
