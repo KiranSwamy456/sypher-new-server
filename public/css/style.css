@@ -11051,6 +11051,7 @@ section.tf__counter_3 {
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
+  margin-left: 15%;
 }
 
 .logo {
@@ -11086,9 +11087,20 @@ section.tf__counter_3 {
   max-width: 380px;
 }
 
+.register-wrapper {
+  width: 100%;
+  padding:15px;
+}
+
 .signin-title {
   color: #1c3faa;
   font-weight: 600;
+}
+
+.register-title{
+  color: #1c3faa;
+  font-weight: 600;
+  margin-left: 10px;
 }
 
 /* INPUT STYLE */
