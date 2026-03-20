@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import Select from "react-select";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function ParentRegistrationPage() { 
   const studentSectionRef = useRef(null);
@@ -8,11 +9,13 @@ export default function ParentRegistrationPage() {
   const [parentData, setParentData] = useState({
     parentName: "",
     parentEmail: "",
+    password: "",
+    phone: "",
     livesIn: "",
     contactedVia: "",
   });
 
-  
+  const [showPassword, setShowPassword] = useState(false);
   const [students, setStudents] = useState([]);
   const [showStudentForm, setShowStudentForm] = useState(false);
 
@@ -172,6 +175,8 @@ export default function ParentRegistrationPage() {
         const payload = {
           parentName: parentData.parentName,
           parentEmail: parentData.parentEmail,
+          password: parentData.password,
+          phone: parentData.phone,
           livesIn: parentData.livesIn,
           contactedVia: parentData.contactedVia,
           students: students
@@ -199,6 +204,8 @@ export default function ParentRegistrationPage() {
         setParentData({
           parentName: "",
           parentEmail: "",
+          password: "",
+          phone: "",
           livesIn: "",
           contactedVia: ""
         });
@@ -248,6 +255,46 @@ export default function ParentRegistrationPage() {
                 }
               />
             </div>
+            <div className="col-md-6 mb-3">
+              <label>Password *</label>
+              <div className="input-group">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="form-control"
+                  required
+                  value={parentData.password}
+                  onChange={(e) =>
+                    setParentData({
+                      ...parentData,
+                      password: e.target.value,
+                    })
+                  }
+                />
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
+            </div>
+
+          <div className="col-md-6 mb-3">
+            <label>Phone Number *</label>
+            <input
+              type="tel"
+              className="form-control"
+              required
+              value={parentData.phone}
+              onChange={(e) =>
+                setParentData({
+                  ...parentData,
+                  phone: e.target.value,
+                })
+              }
+            />
+          </div>
             <div className="col-md-6 mb-3">
               <label>Lives In</label>
               <input

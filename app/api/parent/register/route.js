@@ -10,6 +10,8 @@ export async function POST(request) {
     const {
       parentName,
       parentEmail,
+      password,
+      phone,
       livesIn,
       contactedVia,
       students
@@ -30,8 +32,8 @@ export async function POST(request) {
     }
 
     /**
-     * 1️⃣ Insert Parent
-     */
+     * 1️⃣ Insert Parent 
+     
     const parentResult = await query(
       `INSERT INTO parent_registration 
       (parent_name, parent_email, lives_in, connected_via)
@@ -41,7 +43,26 @@ export async function POST(request) {
 
     const parentId = parentResult.insertId;
 
-    console.log("Parent created:", parentId);
+    console.log("Parent created:", parentId); */
+
+    const result = await query(
+      `INSERT INTO users 
+      (name, email, password, role_code, mobile_number, city, pincode, created_at, updated_at) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [
+        parentName,
+        parentEmail,
+        password,
+        605,     // or your role code constant
+        phone || null,
+        livesIn || null,
+        523262
+      ]
+    );
+
+    const parentID = result.insertId;
+    console.log("===== User (Parent) created:", result);
+    console.log("User (Parent) created:", parentID);
 
     /**
      * 2️⃣ Insert Students
@@ -52,11 +73,11 @@ export async function POST(request) {
       const subjects = student.subjects.join(",");
 
       await query(
-        `INSERT INTO student_registration
+        `INSERT INTO student_parent_registration
         (parent_id, student_name, student_email, category, subjects)
         VALUES (?, ?, ?, ?, ?)`,
         [
-          parentId,
+          parentID,
           student.studentName,
           student.studentEmail,
           category,
@@ -64,11 +85,11 @@ export async function POST(request) {
         ]
       );
     }
-
+    console.log("===== Insert Students", result);
     return NextResponse.json({
       success: true,
       message: "Parent and students registered successfully",
-      parentId: parentId,
+      parentId: parentID,
       studentsCount: students.length
     });
 
