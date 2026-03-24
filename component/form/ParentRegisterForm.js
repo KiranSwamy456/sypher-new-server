@@ -12,7 +12,7 @@ export default function ParentRegistrationPage() {
     password: "",
     phone: "",
     livesIn: "",
-    contactedVia: "",
+    pincode: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -178,7 +178,7 @@ export default function ParentRegistrationPage() {
           password: parentData.password,
           phone: parentData.phone,
           livesIn: parentData.livesIn,
-          contactedVia: parentData.contactedVia,
+          pincode: parentData.pincode,
           students: students
         };
 
@@ -207,15 +207,19 @@ export default function ParentRegistrationPage() {
           password: "",
           phone: "",
           livesIn: "",
-          contactedVia: ""
+          pincode: ""
         });
 
         setStudents([]);
+
+        // Redirect to login page
+        window.location.href = "/sign-in";
 
       } catch (error) {
         console.error(error);
         alert("Something went wrong while submitting registration");
       }
+      
     };
   
 
@@ -306,25 +310,20 @@ export default function ParentRegistrationPage() {
                 }
               />
             </div>
-
             <div className="col-md-6 mb-3">
-              <label>Connected Via</label>
-              <select
+              <label>Pincode</label>
+              <input
+                type="text"
                 className="form-control"
-                value={parentData.contactedVia}
-                onChange={(e) =>
-                  setParentData({
-                    ...parentData,
-                    contactedVia: e.target.value,
-                  })
-                }
-              >
-                <option value="">Select</option>
-                <option value="Phone">Phone</option>
-                <option value="Email">Email</option>
-                <option value="WhatsApp">WhatsApp</option>
-              </select>
+                value={parentData.pincode}
+                maxLength={9}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+                  setParentData({ ...parentData, pincode: value });
+                }}
+              />
             </div>
+            
           </div>
           <div className="">
               {!showStudentForm && (

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
@@ -53,8 +53,15 @@ const LoginForm = () => {
         alert(`❌ Login Failed\n\n${errorMessage}`);
       } else if (result?.ok) {
         // Login successful, redirect to admin
-        console.log('Login successful, redirecting to /admin');
-        window.location.href = '/admin';
+        const session = await getSession();
+
+          if (session?.user?.roleCode === 605) {
+            window.location.href = "/parent";
+          } else if ([602, 603].includes(session?.user?.roleCode)) {
+            window.location.href = "/admin";
+          } else {
+            window.location.href = "/";
+          }
       }
     } catch (error) {
       console.error('Login error:', error);

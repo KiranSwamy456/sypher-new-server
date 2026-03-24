@@ -60,7 +60,7 @@ export default function LoginSection() {
             </div>
 
             {/* Title */}
-            <h2 className="signin-title mb-4">Sign in</h2>
+            <h2 className="signin-title mb-4">Sign in</h2> 
 
             {/* Login Form */}
             <LoginForm />

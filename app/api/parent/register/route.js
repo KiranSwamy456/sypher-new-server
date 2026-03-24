@@ -13,7 +13,7 @@ export async function POST(request) {
       password,
       phone,
       livesIn,
-      contactedVia,
+      pincode,
       students
     } = body;
 
@@ -56,7 +56,7 @@ export async function POST(request) {
         605,     // or your role code constant
         phone || null,
         livesIn || null,
-        523262
+        pincode || null
       ]
     );
 
@@ -73,7 +73,7 @@ export async function POST(request) {
       const subjects = student.subjects.join(",");
 
       await query(
-        `INSERT INTO student_parent_registration
+        `INSERT INTO parent_student_registrations
         (parent_id, student_name, student_email, category, subjects)
         VALUES (?, ?, ?, ?, ?)`,
         [
