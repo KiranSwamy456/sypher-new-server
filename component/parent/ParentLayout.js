@@ -17,8 +17,8 @@ const ParentLayout = ({ children }) => {
     { name: 'Home', path: '/parent', icon: 'fas fa-home' },
    // { name: 'Users', path: '/admin/users', icon: 'fas fa-users' },
     // { name: 'Registrations', path: '/admin/registrations', icon: 'fas fa-clipboard-list' },
-    { name: 'Students', path: '/parent', icon: 'fas fa-user-graduate'},
-    { name: 'Rate Card', path: '/parent', icon: 'fas fa-user-graduate'}
+    //{ name: 'Students', path: '/parent/#', icon: 'fas fa-user-graduate'},
+    //{ name: 'Rate Card', path: '/parent/#', icon: 'fas fa-user-graduate'}
   ];
 
   return (
@@ -83,7 +83,7 @@ const ParentLayout = ({ children }) => {
                     onClick={handleLogout}
                     className="dropdown-item logout-btn"
                   >
-                    <i className="fas fa-sign-out-alt"></i> Logout1
+                    <i className="fas fa-sign-out-alt"></i> Logout
                   </button>
                 </div>
               </div>

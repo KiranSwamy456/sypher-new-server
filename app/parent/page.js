@@ -1,13 +1,10 @@
 "use client";
 import { useState, useEffect } from 'react';
-import StatsCards from 'component/admin/StatsCards';
+import StatsCards from 'component/parent/StatsCards';
 
-export default function AdminHome() {
+export default function ParentHome() {
   const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalRegistrations: 0,
-    adminUsers: 0,
-    regularUsers: 0
+    totalRegistrations: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -20,21 +17,19 @@ export default function AdminHome() {
       // Initialize variables
       let totalUsers = 0, adminUsers = 0, regularUsers = 0;
       let totalRegistrations = 0;
-
+      const parentId = 13;
       // Fetch users data
       try {
-        const usersRes = await fetch('/api/auth/users/');
+        const usersRes = await fetch(`/api/parent/students/count?parent_id=${parentId}`);
+        console.log("===== usersRes - students count :",usersRes);
         if (usersRes.ok) {
           const usersData = await usersRes.json();
-          console.log('Users API response:', usersData);
-          
+
           if (usersData.success && usersData.users) {
             totalUsers = usersData.users.length;
             adminUsers = usersData.users.filter(u => [602, 603].includes(u.role_code)).length;
             regularUsers = usersData.users.filter(u => u.role_code === 601).length;
           }
-        } else {
-          console.error('Users API error:', usersRes.status);
         }
       } catch (usersError) {
         console.error('Error fetching users:', usersError);

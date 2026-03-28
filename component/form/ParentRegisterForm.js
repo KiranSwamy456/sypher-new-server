@@ -2,7 +2,10 @@
 import { useState, useRef } from "react";
 import Select from "react-select";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-
+import { toast } from "react-toastify";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+import { isValidPhoneNumber } from "react-phone-number-input";
 export default function ParentRegistrationPage() { 
   const studentSectionRef = useRef(null);
 
@@ -127,14 +130,14 @@ export default function ParentRegistrationPage() {
   };
 
   
-  const handleAddStudent = () => {
+      const handleAddStudent = () => {
         if (!studentForm.studentName || !studentForm.studentEmail) {
-          alert("Please fill required fields");
+          toast.error("Please fill required fields");
           return;
         }
 
         if (studentForm.categories.length === 0) {
-          alert("Please select at least one category");
+          toast.warn("Please select at least one category");
           return;
         }
 
@@ -156,71 +159,98 @@ export default function ParentRegistrationPage() {
         setShowStudentForm(false);
       };
       
+      const [showDeleteModal, setShowDeleteModal] = useState(false);
+      const [studentToDelete, setStudentToDelete] = useState(null);
+      
+      const confirmRemoveStudent = (index) => {
+        setStudentToDelete(index);
+        setShowDeleteModal(true);
+      };
+
+      const handleConfirmDelete = () => {
+        if (studentToDelete !== null) {
+          removeStudent(studentToDelete);
+        }
+        setShowDeleteModal(false);
+        setStudentToDelete(null);
+      };
+
       const removeStudent = (index) => {
         const updated = [...students];
         updated.splice(index, 1);
         setStudents(updated);
       };
 
+     
+
       const handleSubmit = async (e) => {
-      e.preventDefault();
+        e.preventDefault();
 
-      if (students.length === 0) {
-        alert("Please add at least one student");
-        return;
-      }
-
-      try {
-
-        const payload = {
-          parentName: parentData.parentName,
-          parentEmail: parentData.parentEmail,
-          password: parentData.password,
-          phone: parentData.phone,
-          livesIn: parentData.livesIn,
-          pincode: parentData.pincode,
-          students: students
-        };
-
-        console.log("Submitting payload:", payload);
-
-        const response = await fetch("/api/parent/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Registration failed");
+        if (students.length === 0) {
+          toast.error("Please add at least one student");
+          return;
         }
+        if (!isValidPhoneNumber(parentData.phone || "")) {
+          toast.error("Invalid phone number");
+          return;
+        }
+        const toastId = toast.loading("Submitting registration...");
 
-        alert("Registration submitted successfully!");
+        try {
+          const payload = {
+            parentName: parentData.parentName,
+            parentEmail: parentData.parentEmail,
+            password: parentData.password,
+            phone: parentData.phone,
+            livesIn: parentData.livesIn,
+            pincode: parentData.pincode,
+            students: students
+          };
 
-        // Reset form
-        setParentData({
-          parentName: "",
-          parentEmail: "",
-          password: "",
-          phone: "",
-          livesIn: "",
-          pincode: ""
-        });
+          const response = await fetch("/api/parent/register", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
 
-        setStudents([]);
+          const data = await response.json();
 
-        // Redirect to login page
-        window.location.href = "/sign-in";
+          if (!response.ok) {
+            throw new Error(data.error || "Registration failed");
+          }
 
-      } catch (error) {
-        console.error(error);
-        alert("Something went wrong while submitting registration");
-      }
-      
-    };
+          toast.update(toastId, {
+            render: "Registration submitted successfully!",
+            type: "success",
+            isLoading: false,
+            autoClose: 3000
+          });
+
+          // reset + redirect
+          setParentData({
+            parentName: "",
+            parentEmail: "",
+            password: "",
+            phone: "",
+            livesIn: "",
+            pincode: ""
+          });
+
+          setStudents([]);
+
+          window.location.href = "/sign-in";
+
+        } catch (error) {
+          toast.update(toastId, {
+            render: error.message || "Something went wrong",
+            type: "error",
+            isLoading: false,
+            autoClose: 3000
+          });
+        }
+      };
   
 
   return (
@@ -286,17 +316,17 @@ export default function ParentRegistrationPage() {
 
           <div className="col-md-6 mb-3">
             <label>Phone Number *</label>
-            <input
-              type="tel"
-              className="form-control"
-              required
+            <PhoneInput
+              international
+              defaultCountry="IN" // change if needed
               value={parentData.phone}
-              onChange={(e) =>
+              onChange={(value) =>
                 setParentData({
                   ...parentData,
-                  phone: e.target.value,
+                  phone: value,
                 })
               }
+              className=""
             />
           </div>
             <div className="col-md-6 mb-3">
@@ -370,6 +400,7 @@ export default function ParentRegistrationPage() {
                   <input
                     type="email"
                     className="form-control"
+                    required
                     placeholder="Student Email *"
                     value={studentForm.studentEmail}
                     onChange={(e) =>
@@ -458,33 +489,76 @@ export default function ParentRegistrationPage() {
           )}
           {students.length > 0 && (
             <div className="mt-4">
-              <h5 class="mb-2"><b>Added Students</b></h5>
+              <h5 className="mb-2"><b>Added Students</b></h5>
               {students.map((student, index) => (
-                <div key={index} className="card p-3 mb-2">
-                  <div className="d-flex justify-content-between">
-                    <div>
-                      <strong>Name : </strong>{student.studentName}
-                      <br />
-                      <strong>Email : </strong>{student.studentEmail}
-                      <br/>
-                      <strong>Categories: </strong>{student.categories.join(", ")}
-                      <br />
-                      <strong>Subjects: </strong>{student.subjects.join(", ")}
-                    </div>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => removeStudent(index)}
-                    >
-                      <i className="fas fa-trash"></i>
-                    </button>
+                <div key={index} className="card p-3 mb-2 position-relative">
+                  
+                  {/* Delete Icon */}
+                  <i
+                    className="fas fa-trash delete-icon"
+                    onClick={() => confirmRemoveStudent(index)}
+                  ></i>
+
+                  <div>
+                    <strong>Name : </strong>{student.studentName}
+                    <br />
+                    <strong>Email : </strong>{student.studentEmail}
+                    <br />
+                    <strong>Categories: </strong>{student.categories.join(", ")}
+                    <br />
+                    <strong>Subjects: </strong>{student.subjects.join(", ")}
                   </div>
+
                 </div>
               ))}
             </div>
           )}
-          <button type="submit" class="btn login-btn w-100 mt-4">Submit</button>          
+          <button type="submit" className="btn login-btn w-100 mt-4">Submit</button>          
         </form>
       </div>
+      {showDeleteModal && (
+        <>
+          <div className="modal fade show d-block" tabIndex="-1">
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+
+                <div className="modal-header">
+                  <h5 className="modal-title">Confirm Delete</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowDeleteModal(false)}
+                  ></button>
+                </div>
+
+                <div className="modal-body">
+                  <p>Are you sure you want to delete this student?</p>
+                </div>
+
+                <div className="modal-footer">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowDeleteModal(false)}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    className="btn btn-danger"
+                    onClick={handleConfirmDelete}
+                  >
+                    Yes, Delete
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          {/* Backdrop */}
+          <div className="modal-backdrop fade show"></div>
+        </>
+      )}
     </div>
   );
 }

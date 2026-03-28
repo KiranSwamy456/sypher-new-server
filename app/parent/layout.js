@@ -2,10 +2,11 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import AdminLayout from '@/component/parent/ParentLayout';
+import ParentLayout from '@/component/parent/ParentLayout';
 import '@/styles/admin.css';
 
-export default function AdminLayoutWrapper({ children }) {
+
+export default function ParentLayoutWrapper({ children }) {
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -17,7 +18,7 @@ export default function AdminLayoutWrapper({ children }) {
     
     // If authenticated, check role
     if (status === "authenticated") {
-      const allowedRoles = [605]; // Admin and Super Admin
+      const allowedRoles = [605]; // Parent 
       if (!allowedRoles.includes(session?.user?.roleCode)) {
         router.push('/sign-in');
       }
@@ -50,5 +51,5 @@ export default function AdminLayoutWrapper({ children }) {
     return null;
   }
 
-  return <AdminLayout>{children}</AdminLayout>;
+  return <ParentLayout>{children}</ParentLayout>;
 }
