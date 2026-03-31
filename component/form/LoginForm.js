@@ -1,13 +1,15 @@
 "use client";
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -31,7 +33,7 @@ const LoginForm = () => {
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        redirect: false, // Don't redirect automatically
+        redirect: false, // Don't redirect automatically 
         callbackUrl: '/admin',
       });
 
@@ -51,8 +53,15 @@ const LoginForm = () => {
         alert(`❌ Login Failed\n\n${errorMessage}`);
       } else if (result?.ok) {
         // Login successful, redirect to admin
-        console.log('Login successful, redirecting to /admin');
-        window.location.href = '/admin';
+        const session = await getSession();
+
+          if (session?.user?.roleCode === 605) {
+            window.location.href = "/parent";
+          } else if ([602, 603].includes(session?.user?.roleCode)) {
+            window.location.href = "/admin";
+          } else {
+            window.location.href = "/";
+          }
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -87,9 +96,9 @@ const LoginForm = () => {
       </div>
 
       {/* Password */}
-      <div className="mb-3">
+      <div className="mb-3 position-relative">
         <input
-          type="password"
+          type={showPassword ? "text" : "password"}
           name="password"
           className="form-control custom-input"
           placeholder="Password"
@@ -98,6 +107,14 @@ const LoginForm = () => {
           required
           disabled={loading}
         />
+        <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="btn position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0 bg-transparent"
+            tabIndex={-1}
+          >
+            {showPassword ? <FiEyeOff /> : <FiEye />}
+          </button>        
       </div>
 
       {/* Remember + Forgot */}

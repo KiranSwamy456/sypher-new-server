@@ -302,7 +302,7 @@ const handleCategoryChange = (selectedOptions) => {
           className="btn btn-primary"
           onClick={() => setShowCreateModal(true)}
         >
-          <i className="fas fa-plus"></i> Create Registration
+          <i className="fas fa-plus"></i> Create Registration 
         </button>
       </div>
 

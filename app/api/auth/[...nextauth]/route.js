@@ -47,9 +47,9 @@ export const authOptions = {
             throw new Error("Invalid credentials");
           }
 
-          // Check if user has admin role
-          if (![602, 603].includes(user.role_code)) {
-            throw new Error("Admin access required");
+          // Allow  admin , super admin roles and parent (602, 603 , 605)e
+          if (![602, 603, 605].includes(user.role_code)) {
+            throw new Error("Access denied for this role");
           }
 
           // Return user object for JWT
@@ -111,7 +111,7 @@ export const authOptions = {
         }
 
         // Allow only admin and super admin roles (602, 603)
-        if (![602, 603].includes(dbUser.role_code)) {
+        if (![602, 603, 605].includes(dbUser.role_code)) {
           console.log("❌ User role not authorized:", dbUser.role_code);
           return "/sign-in?error=RoleNotAuthorized";
         }
@@ -178,15 +178,26 @@ export const authOptions = {
       return session;
     },
 
-    async redirect({ url, baseUrl }) {
+    async redirect({ url, baseUrl, token }) {
       console.log("=== Redirect Callback ===");
       console.log("Redirect URL:", url);
       console.log("Base URL:", baseUrl);
-      
+
+      // Redirect after sign in (url is typically /api/auth/callback/credentials?callbackUrl=...)
+      if (token && token.roleCode) {
+        if (token.roleCode === 605) {
+          return baseUrl + '/parent';
+        } else if ([602, 603].includes(token.roleCode)) {
+          return baseUrl + '/admin';
+        } else {
+          return baseUrl; // fallback, home page or sign-in
+        }
+      }
+
+      // Fallback redirect logic
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       else if (new URL(url).origin === baseUrl) return url;
-      
-      console.log("Redirecting to:", baseUrl + "/admin");
+
       return baseUrl + "/admin";
     },
   },
@@ -210,6 +221,7 @@ function getRoleName(roleCode) {
     602: "Admin",
     603: "Super Admin",
     604: "Invoice User",
+    605:"Parent"
   };
   return roleMap[roleCode] || "Unknown";
 }
