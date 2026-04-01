@@ -13,14 +13,25 @@ const AdminLayout = ({ children }) => {
     await signOut({ redirect: true, callbackUrl: '/sign-in' });
   };
 
-  const menuItems = [
+  const roleCode = session?.user?.roleCode;
+
+  const allMenuItems = [
     { name: 'Home', path: '/admin', icon: 'fas fa-home' },
     { name: 'Users', path: '/admin/users', icon: 'fas fa-users' },
     { name: 'Registrations', path: '/admin/registrations', icon: 'fas fa-clipboard-list' },
-    { name: 'Students', path: '/admin/students', icon: 'fas fa-user-graduate'},
-{ name: 'Rate Card', path: '/admin/rate-cards', icon: 'fas fa-user-graduate'}
+    { name: 'Students', path: '/admin/students', icon: 'fas fa-user-graduate' },
+    { name: 'Rate Card', path: '/admin/rate-cards', icon: 'fas fa-user-graduate' }
   ];
 
+  const rolePermissions = {
+    "602": ['Home', 'Users', 'Registrations', 'Students', 'Rate Card'],
+    "605": ['Home', 'Students',]
+  };
+
+  const menuItems = allMenuItems.filter(item =>
+    rolePermissions[roleCode]?.includes(item.name)
+  );
+  
   return (
     <div className="admin-wrapper">
       {/* Sidebar */}

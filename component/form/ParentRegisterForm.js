@@ -163,13 +163,16 @@ export default function ParentRegistrationPage() {
       const [studentToDelete, setStudentToDelete] = useState(null);
       
       const confirmRemoveStudent = (index) => {
-        setStudentToDelete(index);
+        setStudentToDelete({
+          index,
+          name: students[index].studentName
+        });
         setShowDeleteModal(true);
       };
 
       const handleConfirmDelete = () => {
         if (studentToDelete !== null) {
-          removeStudent(studentToDelete);
+          removeStudent(studentToDelete.index);
         }
         setShowDeleteModal(false);
         setStudentToDelete(null);
@@ -217,6 +220,8 @@ export default function ParentRegistrationPage() {
 
           const data = await response.json();
 
+          
+
           if (!response.ok) {
             throw new Error(data.error || "Registration failed");
           }
@@ -259,7 +264,7 @@ export default function ParentRegistrationPage() {
         <form onSubmit={handleSubmit}>
           <div className="row">
             <div className="col-md-6 mb-3">
-              <label>Parent Name *</label>
+              <label>Parent Name <span style={{ color: "red" }}>*</span></label>
               <input
                 type="text"
                 className="form-control"
@@ -275,7 +280,7 @@ export default function ParentRegistrationPage() {
             </div>
 
             <div className="col-md-6 mb-3">
-              <label>Parent Email *</label>
+              <label>Parent Email <span style={{ color: "red" }}>*</span></label>
               <input
                 type="email"
                 className="form-control"
@@ -290,7 +295,7 @@ export default function ParentRegistrationPage() {
               />
             </div>
             <div className="col-md-6 mb-3">
-              <label>Password *</label>
+              <label>Password <span style={{ color: "red" }}>*</span></label>
               <div className="input-group">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -315,7 +320,7 @@ export default function ParentRegistrationPage() {
             </div>
 
           <div className="col-md-6 mb-3">
-            <label>Phone Number *</label>
+            <label>Phone Number <span style={{ color: "red" }}>*</span></label>
             <PhoneInput
               international
               defaultCountry="IN" // change if needed
@@ -378,14 +383,14 @@ export default function ParentRegistrationPage() {
               ref={studentSectionRef}
               className="card p-3 bg-light"
             >
-              <h5>Student Details</h5>
+              <h5 className="mb-2">Student Details</h5>
 
               <div className="row">
                 <div className="col-md-6 mb-2">
+                  <label className="text-muted">Student Name <span style={{ color: "red" }}>*</span></label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Student Name *"
                     value={studentForm.studentName}
                     onChange={(e) =>
                       setStudentForm({
@@ -397,11 +402,11 @@ export default function ParentRegistrationPage() {
                 </div>
 
                 <div className="col-md-6 mb-2">
+                  <label className="text-muted">Student Email <span style={{ color: "red" }}>*</span></label>
                   <input
                     type="email"
                     className="form-control"
                     required
-                    placeholder="Student Email *"
                     value={studentForm.studentEmail}
                     onChange={(e) =>
                       setStudentForm({
@@ -412,7 +417,7 @@ export default function ParentRegistrationPage() {
                   />
                 </div>
                 <div className="col-12 mt-3">
-                  <label><strong>Step 1: Select Categories *</strong></label>
+                  <label><strong>Step 1: Select Categories <span style={{ color: "red" }}>*</span></strong></label>
                   <br />
                         <small className="text-muted">Choose Grades, AP Courses, or College Tests</small>
                   <Select
@@ -429,7 +434,7 @@ export default function ParentRegistrationPage() {
                 </div>
                 {availableSubjects.length > 0 && (
                   <div className="col-12 mt-3">
-                    <label><strong>Step 2: Select Subjects *</strong></label>
+                    <label><strong>Step 2: Select Subjects <span style={{ color: "red" }}>*</span></strong></label>
                     <br />
                     <small className="text-muted">
                       {studentForm.categories.includes('AP-Courses') 
@@ -532,7 +537,9 @@ export default function ParentRegistrationPage() {
                 </div>
 
                 <div className="modal-body">
-                  <p>Are you sure you want to delete this student?</p>
+                  <p>Are you sure you want to delete student{" "}
+                  <strong>{studentToDelete?.name}</strong>?</p>
+                  <p>This action cannot be undone.</p>
                 </div>
 
                 <div className="modal-footer">
