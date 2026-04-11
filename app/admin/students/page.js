@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import StudentTable from "@/component/admin/StudentTable";
+import StudentTable from "@/component/admin/StudentTable"; 
 
 export default function RegistrationsPage() {
   const [registrations, setRegistrations] = useState([]);

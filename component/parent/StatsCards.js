@@ -2,8 +2,8 @@ const StatsCards = ({ stats }) => {
   const cards = [
     {
       title: 'Total Students', 
-      value: 1,
-      icon: 'fas fa-user-graduate',
+      value: stats.totalStudents || 0,
+      icon: 'fas fa-user-graduate', 
       color: 'success'
     }
   ];

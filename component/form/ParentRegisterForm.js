@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { isValidPhoneNumber } from "react-phone-number-input";
-export default function ParentRegistrationPage() { 
+export default function ParentRegistrationPage() {
   const studentSectionRef = useRef(null);
 
   const [parentData, setParentData] = useState({
@@ -22,7 +22,6 @@ export default function ParentRegistrationPage() {
   const [students, setStudents] = useState([]);
   const [showStudentForm, setShowStudentForm] = useState(false);
 
-  
   const [studentForm, setStudentForm] = useState({
     studentName: "",
     studentEmail: "",
@@ -36,7 +35,6 @@ export default function ParentRegistrationPage() {
   const [availableSubjects, setAvailableSubjects] = useState([]);
   const [availableCourses, setAvailableCourses] = useState([]);
 
-  
   const categoryOptions = [
     { value: "Grade-1", label: "Grade 1" },
     { value: "Grade-2", label: "Grade 2" },
@@ -79,7 +77,6 @@ export default function ParentRegistrationPage() {
     "ACT",
   ];
 
-  
   const handleCategoryChange = (selected) => {
     const categoryValues = selected
       ? selected.map((option) => option.value)
@@ -101,16 +98,13 @@ export default function ParentRegistrationPage() {
     setStudentForm((prev) => ({
       ...prev,
       categories: categoryValues,
-      subjects: prev.subjects.filter((s) =>
-        uniqueSubjects.includes(s)
-      ),
+      subjects: prev.subjects.filter((s) => uniqueSubjects.includes(s)),
       courses: hasAP ? prev.courses : [],
     }));
 
     if (!hasAP) setAvailableCourses([]);
   };
 
-  
   const handleSubjectChange = (selected) => {
     const subjectValues = selected
       ? selected.map((option) => option.value)
@@ -129,134 +123,126 @@ export default function ParentRegistrationPage() {
     }
   };
 
-  
-      const handleAddStudent = () => {
-        if (!studentForm.studentName || !studentForm.studentEmail) {
-          toast.error("Please fill required fields");
-          return;
-        }
+  const handleAddStudent = () => {
+    if (!studentForm.studentName || !studentForm.studentEmail) {
+      toast.error("Please fill required fields");
+      return;
+    }
 
-        if (studentForm.categories.length === 0) {
-          toast.warn("Please select at least one category");
-          return;
-        }
+    if (studentForm.categories.length === 0) {
+      toast.warn("Please select at least one category");
+      return;
+    }
 
-        setStudents((prev) => [...prev, studentForm]);
+    setStudents((prev) => [...prev, studentForm]);
 
-        
-        setStudentForm({
-          studentName: "",
-          studentEmail: "",
-          studentGrade: "",
-          phone: "",
-          categories: [],
-          subjects: [],
-          courses: [],
-        });
+    setStudentForm({
+      studentName: "",
+      studentEmail: "",
+      studentGrade: "",
+      phone: "",
+      categories: [],
+      subjects: [],
+      courses: [],
+    });
 
-        setAvailableSubjects([]);
-        setAvailableCourses([]);
-        setShowStudentForm(false);
+    setAvailableSubjects([]);
+    setAvailableCourses([]);
+    setShowStudentForm(false);
+  };
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
+
+  const confirmRemoveStudent = (index) => {
+    setStudentToDelete({
+      index,
+      name: students[index].studentName,
+    });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (studentToDelete !== null) {
+      removeStudent(studentToDelete.index);
+    }
+    setShowDeleteModal(false);
+    setStudentToDelete(null);
+  };
+
+  const removeStudent = (index) => {
+    const updated = [...students];
+    updated.splice(index, 1);
+    setStudents(updated);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (students.length === 0) {
+      toast.error("Please add at least one student");
+      return;
+    }
+    if (!isValidPhoneNumber(parentData.phone || "")) {
+      toast.error("Invalid phone number");
+      return;
+    }
+    const toastId = toast.loading("Submitting registration...");
+
+    try {
+      const payload = {
+        parentName: parentData.parentName,
+        parentEmail: parentData.parentEmail,
+        password: parentData.password,
+        phone: parentData.phone,
+        livesIn: parentData.livesIn,
+        pincode: parentData.pincode,
+        students: students,
       };
-      
-      const [showDeleteModal, setShowDeleteModal] = useState(false);
-      const [studentToDelete, setStudentToDelete] = useState(null);
-      
-      const confirmRemoveStudent = (index) => {
-        setStudentToDelete({
-          index,
-          name: students[index].studentName
-        });
-        setShowDeleteModal(true);
-      };
 
-      const handleConfirmDelete = () => {
-        if (studentToDelete !== null) {
-          removeStudent(studentToDelete.index);
-        }
-        setShowDeleteModal(false);
-        setStudentToDelete(null);
-      };
+      const response = await fetch("/api/parent/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-      const removeStudent = (index) => {
-        const updated = [...students];
-        updated.splice(index, 1);
-        setStudents(updated);
-      };
+      const data = await response.json();
 
-     
+      if (!response.ok) {
+        throw new Error(data.error || "Registration failed");
+      }
 
-      const handleSubmit = async (e) => {
-        e.preventDefault();
+      toast.update(toastId, {
+        render: "Registration submitted successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
 
-        if (students.length === 0) {
-          toast.error("Please add at least one student");
-          return;
-        }
-        if (!isValidPhoneNumber(parentData.phone || "")) {
-          toast.error("Invalid phone number");
-          return;
-        }
-        const toastId = toast.loading("Submitting registration...");
+      // reset + redirect
+      setParentData({
+        parentName: "",
+        parentEmail: "",
+        password: "",
+        phone: "",
+        livesIn: "",
+        pincode: "",
+      });
 
-        try {
-          const payload = {
-            parentName: parentData.parentName,
-            parentEmail: parentData.parentEmail,
-            password: parentData.password,
-            phone: parentData.phone,
-            livesIn: parentData.livesIn,
-            pincode: parentData.pincode,
-            students: students
-          };
+      setStudents([]);
 
-          const response = await fetch("/api/parent/register", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-          });
-
-          const data = await response.json();
-
-          
-
-          if (!response.ok) {
-            throw new Error(data.error || "Registration failed");
-          }
-
-          toast.update(toastId, {
-            render: "Registration submitted successfully!",
-            type: "success",
-            isLoading: false,
-            autoClose: 3000
-          });
-
-          // reset + redirect
-          setParentData({
-            parentName: "",
-            parentEmail: "",
-            password: "",
-            phone: "",
-            livesIn: "",
-            pincode: ""
-          });
-
-          setStudents([]);
-
-          window.location.href = "/sign-in";
-
-        } catch (error) {
-          toast.update(toastId, {
-            render: error.message || "Something went wrong",
-            type: "error",
-            isLoading: false,
-            autoClose: 3000
-          });
-        }
-      };
-  
+      window.location.href = "/sign-in";
+    } catch (error) {
+      toast.update(toastId, {
+        render: error.message || "Something went wrong",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    }
+  };
 
   return (
     <div className="container">
@@ -264,7 +250,9 @@ export default function ParentRegistrationPage() {
         <form onSubmit={handleSubmit}>
           <div className="row">
             <div className="col-md-6 mb-3">
-              <label>Parent Name <span style={{ color: "red" }}>*</span></label>
+              <label>
+                Parent Name <span style={{ color: "red" }}>*</span>
+              </label>
               <input
                 type="text"
                 className="form-control"
@@ -280,7 +268,9 @@ export default function ParentRegistrationPage() {
             </div>
 
             <div className="col-md-6 mb-3">
-              <label>Parent Email <span style={{ color: "red" }}>*</span></label>
+              <label>
+                Parent Email <span style={{ color: "red" }}>*</span>
+              </label>
               <input
                 type="email"
                 className="form-control"
@@ -295,7 +285,9 @@ export default function ParentRegistrationPage() {
               />
             </div>
             <div className="col-md-6 mb-3">
-              <label>Password <span style={{ color: "red" }}>*</span></label>
+              <label>
+                Password <span style={{ color: "red" }}>*</span>
+              </label>
               <div className="input-group">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -319,21 +311,23 @@ export default function ParentRegistrationPage() {
               </div>
             </div>
 
-          <div className="col-md-6 mb-3">
-            <label>Phone Number <span style={{ color: "red" }}>*</span></label>
-            <PhoneInput
-              international
-              defaultCountry="IN" // change if needed
-              value={parentData.phone}
-              onChange={(value) =>
-                setParentData({
-                  ...parentData,
-                  phone: value,
-                })
-              }
-              className=""
-            />
-          </div>
+            <div className="col-md-6 mb-3">
+              <label>
+                Phone Number <span style={{ color: "red" }}>*</span>
+              </label>
+              <PhoneInput
+                international
+                defaultCountry="IN" // change if needed
+                value={parentData.phone}
+                onChange={(value) =>
+                  setParentData({
+                    ...parentData,
+                    phone: value,
+                  })
+                }
+                className=""
+              />
+            </div>
             <div className="col-md-6 mb-3">
               <label>Lives In</label>
               <input
@@ -358,36 +352,34 @@ export default function ParentRegistrationPage() {
                 }}
               />
             </div>
-            
           </div>
           <div className="">
-              {!showStudentForm && (
-                <button
-                  type="button"
-                  className="btn btn-outline-primary"
-                  onClick={() => {
-                    setShowStudentForm(true);
-                    setTimeout(() => {
-                      studentSectionRef.current?.scrollIntoView({
-                        behavior: "smooth",
-                      });
-                    }, 100);
-                  }}
-                >
-                  + Add Student
-                </button>
-              )}
+            {!showStudentForm && (
+              <button
+                type="button"
+                className="btn btn-outline-primary"
+                onClick={() => {
+                  setShowStudentForm(true);
+                  setTimeout(() => {
+                    studentSectionRef.current?.scrollIntoView({
+                      behavior: "smooth",
+                    });
+                  }, 100);
+                }}
+              >
+                + Add Student
+              </button>
+            )}
           </div>
           {showStudentForm && (
-            <div
-              ref={studentSectionRef}
-              className="card p-3 bg-light"
-            >
+            <div ref={studentSectionRef} className="card p-3 bg-light">
               <h5 className="mb-2">Student Details</h5>
 
               <div className="row">
                 <div className="col-md-6 mb-2">
-                  <label className="text-muted">Student Name <span style={{ color: "red" }}>*</span></label>
+                  <label className="text-muted">
+                    Student Name <span style={{ color: "red" }}>*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-control"
@@ -402,7 +394,9 @@ export default function ParentRegistrationPage() {
                 </div>
 
                 <div className="col-md-6 mb-2">
-                  <label className="text-muted">Student Email <span style={{ color: "red" }}>*</span></label>
+                  <label className="text-muted">
+                    Student Email <span style={{ color: "red" }}>*</span>
+                  </label>
                   <input
                     type="email"
                     className="form-control"
@@ -417,30 +411,41 @@ export default function ParentRegistrationPage() {
                   />
                 </div>
                 <div className="col-12 mt-3">
-                  <label><strong>Step 1: Select Categories <span style={{ color: "red" }}>*</span></strong></label>
+                  <label>
+                    <strong>
+                      Step 1: Select Categories{" "}
+                      <span style={{ color: "red" }}>*</span>
+                    </strong>
+                  </label>
                   <br />
-                        <small className="text-muted">Choose Grades, AP Courses, or College Tests</small>
+                  <small className="text-muted">
+                    Choose Grades, AP Courses, or College Tests
+                  </small>
                   <Select
                     isMulti
                     options={categoryOptions}
                     value={studentForm.categories.map((cat) => ({
                       value: cat,
                       label:
-                        categoryOptions.find((c) => c.value === cat)
-                          ?.label || cat,
+                        categoryOptions.find((c) => c.value === cat)?.label ||
+                        cat,
                     }))}
                     onChange={handleCategoryChange}
                   />
                 </div>
                 {availableSubjects.length > 0 && (
                   <div className="col-12 mt-3">
-                    <label><strong>Step 2: Select Subjects <span style={{ color: "red" }}>*</span></strong></label>
+                    <label>
+                      <strong>
+                        Step 2: Select Subjects{" "}
+                        <span style={{ color: "red" }}>*</span>
+                      </strong>
+                    </label>
                     <br />
                     <small className="text-muted">
-                      {studentForm.categories.includes('AP-Courses') 
-                        ? 'For AP Courses: Select subject categories, then choose specific courses in Step 3'
-                        : 'For Grades/College Tests: These are your final selections'
-                      }
+                      {studentForm.categories.includes("AP-Courses")
+                        ? "For AP Courses: Select subject categories, then choose specific courses in Step 3"
+                        : "For Grades/College Tests: These are your final selections"}
                     </small>
                     <Select
                       isMulti
@@ -494,10 +499,11 @@ export default function ParentRegistrationPage() {
           )}
           {students.length > 0 && (
             <div className="mt-4">
-              <h5 className="mb-2"><b>Added Students</b></h5>
+              <h5 className="mb-2">
+                <b>Added Students</b>
+              </h5>
               {students.map((student, index) => (
                 <div key={index} className="card p-3 mb-2 position-relative">
-                  
                   {/* Delete Icon */}
                   <i
                     className="fas fa-trash delete-icon"
@@ -505,20 +511,25 @@ export default function ParentRegistrationPage() {
                   ></i>
 
                   <div>
-                    <strong>Name : </strong>{student.studentName}
+                    <strong>Name : </strong>
+                    {student.studentName}
                     <br />
-                    <strong>Email : </strong>{student.studentEmail}
+                    <strong>Email : </strong>
+                    {student.studentEmail}
                     <br />
-                    <strong>Categories: </strong>{student.categories.join(", ")}
+                    <strong>Categories: </strong>
+                    {student.categories.join(", ")}
                     <br />
-                    <strong>Subjects: </strong>{student.subjects.join(", ")}
+                    <strong>Subjects: </strong>
+                    {student.subjects.join(", ")}
                   </div>
-
                 </div>
               ))}
             </div>
           )}
-          <button type="submit" className="btn login-btn w-100 mt-4">Submit</button>          
+          <button type="submit" className="btn login-btn w-100 mt-4">
+            Submit
+          </button>
         </form>
       </div>
       {showDeleteModal && (
@@ -526,7 +537,6 @@ export default function ParentRegistrationPage() {
           <div className="modal fade show d-block" tabIndex="-1">
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
-
                 <div className="modal-header">
                   <h5 className="modal-title">Confirm Delete</h5>
                   <button
@@ -537,8 +547,10 @@ export default function ParentRegistrationPage() {
                 </div>
 
                 <div className="modal-body">
-                  <p>Are you sure you want to delete student{" "}
-                  <strong>{studentToDelete?.name}</strong>?</p>
+                  <p>
+                    Are you sure you want to delete student{" "}
+                    <strong>{studentToDelete?.name}</strong>?
+                  </p>
                   <p>This action cannot be undone.</p>
                 </div>
 
@@ -557,7 +569,6 @@ export default function ParentRegistrationPage() {
                     Yes, Delete
                   </button>
                 </div>
-
               </div>
             </div>
           </div>

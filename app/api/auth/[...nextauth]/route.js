@@ -161,47 +161,48 @@ export const authOptions = {
 
     async session({ session, token }) {
       console.log("=== Session Callback ===");
-      // Pass token info to session
+
       if (token) {
-        session.user.userId = token.userId;
-        session.user.name = token.name; // Add this line
-        session.user.email = token.email; // Add this line
-        session.user.roleCode = token.roleCode;
-        session.user.role = token.role;
-        console.log("✅ Session created:", {
-          userId: session.user.userId,
-          name: session.user.name,
-          email: session.user.email,
-          roleCode: session.user.roleCode,
-        });
+        session.user = {
+          id: token.userId,          // ✅ FIXED
+          name: token.name,
+          email: token.email,
+          roleCode: token.roleCode,
+          role: token.role,
+        };
+
+        console.log("✅ Session created:", session.user);
       }
+
       return session;
     },
 
     async redirect({ url, baseUrl, token }) {
       console.log("=== Redirect Callback ===");
-      console.log("Redirect URL:", url);
-      console.log("Base URL:", baseUrl);
 
-      // Redirect after sign in (url is typically /api/auth/callback/credentials?callbackUrl=...)
-      if (token && token.roleCode) {
+      
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      }
+
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+
+      
+      if (token?.roleCode) {
         if (token.roleCode === 605) {
-          return baseUrl + '/parent';
-        } else if ([602, 603].includes(token.roleCode)) {
-          return baseUrl + '/admin';
-        } else {
-          return baseUrl; // fallback, home page or sign-in
+          return `${baseUrl}/parent`;
+        }
+
+        if ([602, 603].includes(token.roleCode)) {
+          return `${baseUrl}/admin`;
         }
       }
 
-      // Fallback redirect logic
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      else if (new URL(url).origin === baseUrl) return url;
-
-      return baseUrl + "/admin";
-    },
+      return baseUrl;
+    }
   },
-
   session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours

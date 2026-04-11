@@ -17,7 +17,7 @@ export async function GET(req) {
     const [rows] = await db.execute(
       `SELECT COUNT(*) AS total_students 
        FROM parent_student_registrations 
-       WHERE parent_id = ? AND is_active = 1`,
+       WHERE parent_id = ? AND is_active = 0`,
       [parentId]
     );
 
