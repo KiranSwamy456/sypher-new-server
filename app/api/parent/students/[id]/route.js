@@ -32,7 +32,7 @@ export async function DELETE(req, { params }) {
 
   await db.query(
     `UPDATE parent_student_registrations 
-     SET is_active=0 
+     SET is_active=1 
      WHERE id=?`,
     [id],
   );

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Select from "react-select";
+import { toast } from "react-toastify";
 
 const ParentStudentTable = ({ registrations = [], loading, onRefresh }) => {
   const [search, setSearch] = useState("");
@@ -101,19 +102,20 @@ const ParentStudentTable = ({ registrations = [], loading, onRefresh }) => {
 
   // 💾 Update student
   const handleUpdate = async () => {
+    if (!formData.student_name || !formData.student_email) {
+      toast.error("Name and Email are required");
+      return;
+    }
+
     setSaving(true);
 
     try {
       const payload = {
         student_name: formData.student_name,
         student_email: formData.student_email,
-
-        // 🔥 IMPORTANT: convert array → string
         category: (formData.categories || []).join(","),
         subjects: (formData.subjects || []).join(","),
       };
-
-      console.log("SENDING UPDATE:", payload);
 
       const res = await fetch(`/api/parent/students/${editingStudent.id}`, {
         method: "PUT",
@@ -122,42 +124,61 @@ const ParentStudentTable = ({ registrations = [], loading, onRefresh }) => {
       });
 
       if (res.ok) {
+        toast.success("Student updated successfully");
         setEditingStudent(null);
         onRefresh();
       } else {
         const err = await res.json();
         console.log("UPDATE ERROR:", err);
-        alert("Failed to update");
+
+        toast.error(err?.message || err?.error || "Failed to update student");
       }
     } catch (err) {
       console.error(err);
-      alert("Error updating");
+      toast.error("Something went wrong while updating student");
     } finally {
       setSaving(false);
     }
   };
 
   // ❌ Delete (soft delete)
-  const handleDelete = async (id, name) => {
-    if (!confirm(`Delete "${name}"?`)) return;
+  const [deleteModal, setDeleteModal] = useState({
+    show: false,
+    id: null,
+    name: "",
+  });
+  const handleDeleteClick = (id, name) => {
+    setDeleteModal({
+      show: true,
+      id,
+      name,
+    });
+  };
+  const confirmDelete = async () => {
+    const { id } = deleteModal;
 
     setDeletingId(id);
+
     try {
       const res = await fetch(`/api/parent/students/${id}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
+        setDeleteModal({ show: false, id: null, name: "" });
         onRefresh();
       } else {
-        alert("Failed to delete");
+        console.log(await res.json());
+        // later replace with toast.error
       }
     } catch (err) {
       console.error(err);
-      alert("Error deleting");
     } finally {
       setDeletingId(null);
     }
+  };
+  const cancelDelete = () => {
+    setDeleteModal({ show: false, id: null, name: "" });
   };
 
   return (
@@ -183,7 +204,7 @@ const ParentStudentTable = ({ registrations = [], loading, onRefresh }) => {
             <table className="table table-bordered table-hover">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>S.No</th>
                   <th>Student Name</th>
                   <th>Email</th>
                   <th>Category</th>
@@ -230,7 +251,9 @@ const ParentStudentTable = ({ registrations = [], loading, onRefresh }) => {
                         </button>
                         <button
                           className="btn btn-sm btn-danger"
-                          onClick={() => handleDelete(s.id, s.student_name)}
+                          onClick={() =>
+                            handleDeleteClick(s.id, s.student_name)
+                          }
                           disabled={deletingId === s.id}
                         >
                           {deletingId === s.id ? (
@@ -248,8 +271,7 @@ const ParentStudentTable = ({ registrations = [], loading, onRefresh }) => {
           </div>
         )}
       </div>
-
-      {/* ✏️ Edit Modal */}
+      {/* Edit Modal */}
       {editingStudent && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -262,6 +284,13 @@ const ParentStudentTable = ({ registrations = [], loading, onRefresh }) => {
               {/* HEADER */}
               <div className="modal-header">
                 <h5>Edit Student</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setEditingStudent(null)}
+                >
+                  &times;
+                </button>
               </div>
 
               {/* BODY */}
@@ -402,6 +431,62 @@ const ParentStudentTable = ({ registrations = [], loading, onRefresh }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Delete Modal */}
+      {deleteModal.show && (
+        <div className="modal-overlay">
+          <div
+            className="modal-content"
+            style={{ maxWidth: "400px", position: "relative" }}
+          >
+            {/* ❌ Close Button (Top Right) */}
+            <button
+              type="button"
+              onClick={cancelDelete}
+              style={{
+                position: "absolute",
+                top: "10px",
+                right: "12px",
+                border: "none",
+                background: "transparent",
+                fontSize: "22px",
+                cursor: "pointer",
+                lineHeight: "1",
+              }}
+            >
+              ×
+            </button>
+
+            <div className="modal-header">
+              <h5>Confirm Delete</h5>
+            </div>
+
+            <div className="modal-body">
+              <p>
+                Are you sure you want to delete{" "}
+                <strong>{deleteModal.name}</strong>?
+              </p>
+
+              <p className="text-danger" style={{ fontSize: "13px" }}>
+                This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={cancelDelete}>
+                Cancel
+              </button>
+
+              <button
+                className="btn btn-danger"
+                onClick={confirmDelete}
+                disabled={deletingId === deleteModal.id}
+              >
+                {deletingId === deleteModal.id ? "Deleting..." : "Delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}

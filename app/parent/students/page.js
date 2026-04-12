@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import ParentStudentTable from "@/component/parent/ParentStudentTable";
 import { FiPlus } from "react-icons/fi";
 import Select from "react-select";
+import { toast } from "react-toastify";
 
 export default function ParentStudentsPage() {
   const [students, setStudents] = useState([]);
@@ -94,12 +95,12 @@ export default function ParentStudentsPage() {
     if (creating) return;
 
     if (!newStudent.student_name || !newStudent.student_email) {
-      alert("Name and Email are required");
+      toast.error("Name and Email are required");
       return;
     }
 
     if (newStudent.categories.length === 0) {
-      alert("Please select at least one category");
+      toast.error("Please select at least one category");
       return;
     }
 
@@ -124,7 +125,7 @@ export default function ParentStudentsPage() {
       });
 
       if (res.ok) {
-        alert("Student created successfully!");
+        toast.success("Student created successfully!");
 
         setShowCreateModal(false);
 
@@ -143,11 +144,11 @@ export default function ParentStudentsPage() {
       } else {
         const errorData = await res.json();
         console.log("CREATE STUDENT ERROR:", errorData);
-        alert(JSON.stringify(errorData, null, 2));
+        toast.error(`${errorData.error}`);
       }
     } catch (err) {
       console.error(err);
-      alert("Error creating student");
+      toast.error("Something went wrong");
     } finally {
       setCreating(false);
     }
@@ -208,6 +209,18 @@ export default function ParentStudentsPage() {
             <form onSubmit={handleCreateStudent}>
               <div className="modal-header">
                 <h5>Add Student</h5>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    fontSize: "20px",
+                    cursor: "pointer",
+                  }}
+                >
+                  ×
+                </button>
               </div>
 
               <div className="modal-body">
