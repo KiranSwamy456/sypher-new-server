@@ -6,48 +6,74 @@ import { usePathname } from 'next/navigation';
 
 const AdminLayout = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const pathname = usePathname();
 
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: '/sign-in' });
   };
 
-  const menuItems = [
-    { name: 'Home', path: '/admin', icon: 'fas fa-home' },
-    { name: 'Users', path: '/admin/users', icon: 'fas fa-users' },
-    { name: 'Registrations', path: '/admin/registrations', icon: 'fas fa-clipboard-list' },
-    { name: 'Students', path: '/admin/students', icon: 'fas fa-user-graduate'},
-{ name: 'Rate Card', path: '/admin/rate-cards', icon: 'fas fa-user-graduate'}
-  ];
+  // ✅ Wait for session
+  if (status === "loading") return null;
+  if (!session) return null;
+
+  const roleCode = session.user.roleCode;
+
+  // ✅ ROLE CONFIG (BEST PRACTICE)
+  const roleConfig = {
+    "602": {
+      basePath: "/admin",
+      menu: [
+        { name: 'Home', path: '/admin', icon: 'fas fa-home' },
+        { name: 'Users', path: '/admin/users', icon: 'fas fa-users' },
+        { name: 'Registrations', path: '/admin/registrations', icon: 'fas fa-clipboard-list' },
+        { name: 'Students', path: '/admin/students', icon: 'fas fa-user-graduate' },
+        { name: 'Rate Card', path: '/admin/rate-cards', icon: 'fas fa-file-invoice' }
+      ]
+    },
+    "605": {
+      basePath: "/parent",
+      menu: [
+        { name: 'Home', path: '/parent', icon: 'fas fa-home' },
+        { name: 'Students', path: '/parent/students', icon: 'fas fa-user-graduate' }
+      ]
+    }
+  };
+
+  const currentRole = roleConfig[roleCode];
+
+  // ❌ If role not found → prevent crash
+  if (!currentRole) return null;
+
+  const menuItems = currentRole.menu;
 
   return (
     <div className="admin-wrapper">
       {/* Sidebar */}
       <aside className={`admin-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
-          
-<h3>
-  {sidebarCollapsed ? (
-        <span style={{ color: "white" }}>S</span>
-  ) : (
-    <a href="https://sypheracademy.com" target="_blank" rel="noopener noreferrer">
-      <img 
-        src="https://sypheracademy.com/images/footer_logo.svg" 
-        alt="Sypher Logo" 
-        className="h-8 w-auto" 
-      />
-    </a>
-  )}
-</h3>
+          <h3>
+            {sidebarCollapsed ? (
+              <span style={{ color: "white" }}>S</span>
+            ) : (
+              <a href="https://sypheracademy.com" target="_blank" rel="noopener noreferrer">
+                <img 
+                  src="https://sypheracademy.com/images/footer_logo.svg" 
+                  alt="Sypher Logo" 
+                  className="h-8 w-auto" 
+                />
+              </a>
+            )}
+          </h3>
         </div>
+
         <nav className="sidebar-nav">
           <ul>
             {menuItems.map((item) => (
               <li key={item.path}>
                 <Link 
                   href={item.path}
-                  className={pathname === item.path ? 'active' : ''}
+                  className={pathname.startsWith(item.path) ? 'active' : ''}
                 >
                   <i className={item.icon}></i>
                   {!sidebarCollapsed && <span>{item.name}</span>}
@@ -58,9 +84,8 @@ const AdminLayout = ({ children }) => {
         </nav>
       </aside>
 
-      {/* Main Content */}
+      {/* Main */}
       <div className={`admin-main ${sidebarCollapsed ? 'expanded' : ''}`}>
-        {/* Header */}
         <header className="admin-header">
           <div className="header-left">
             <button 
@@ -70,14 +95,16 @@ const AdminLayout = ({ children }) => {
               <i className="fas fa-bars"></i>
             </button>
           </div>
+
           <div className="header-right">
             <div className="user-profile">
               <div className="dropdown">
                 <button className="profile-btn dropdown-toggle">
                   <i className="fas fa-user-circle"></i>
-                  <span>{session?.user?.name}</span>
+                  <span>{session.user.name}</span>
                   <i className="fas fa-chevron-down"></i>
                 </button>
+
                 <div className="dropdown-menu">
                   <button 
                     onClick={handleLogout}
@@ -91,7 +118,6 @@ const AdminLayout = ({ children }) => {
           </div>
         </header>
 
-        {/* Content */}
         <main className="admin-content">
           {children}
         </main>

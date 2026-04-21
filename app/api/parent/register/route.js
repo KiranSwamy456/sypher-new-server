@@ -31,20 +31,53 @@ export async function POST(request) {
       );
     }
 
-    /**
-     * 1️⃣ Insert Parent 
-     
-    const parentResult = await query(
-      `INSERT INTO parent_registration 
-      (parent_name, parent_email, lives_in, connected_via)
-      VALUES (?, ?, ?, ?)`,
-      [parentName, parentEmail, livesIn, contactedVia]
+    // ✅ Check if parent email already exists
+    const existingUser = await query(
+      `SELECT id FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1`,
+      [parentEmail]
     );
 
-    const parentId = parentResult.insertId;
+    if (existingUser.length > 0) {
+      return NextResponse.json(
+        { error: "Parent email already exists" },
+        { status: 400 }
+      );
+    }
 
-    console.log("Parent created:", parentId); */
+    const existingPhone = await query(
+      `SELECT id FROM users WHERE mobile_number = ? LIMIT 1`,
+      [phone]
+    );
 
+    if (existingPhone.length > 0) {
+      return NextResponse.json(
+        { error: "Phone number already exists" },
+        { status: 400 }
+      );
+    }    
+    const studentEmails = students.map(s => s.studentEmail);
+    const placeholders = studentEmails.map(() => "?").join(",");
+
+    const existingStudents = await query(
+      `SELECT student_email FROM parent_student_registrations 
+      WHERE student_email IN (${placeholders})`,
+      studentEmails
+    );
+
+    if (existingStudents.length > 0) {
+      return NextResponse.json(
+        { error: "One or more student emails already exist" },
+        { status: 400 }
+      );
+    }
+    const emailSet = new Set(studentEmails);
+
+    if (emailSet.size !== studentEmails.length) {
+      return NextResponse.json(
+        { error: "Duplicate student emails in request" },
+        { status: 400 }
+      );
+    }
     const result = await query(
       `INSERT INTO users 
       (name, email, password, role_code, mobile_number, city, pincode, created_at, updated_at) 
@@ -64,6 +97,7 @@ export async function POST(request) {
     console.log("===== User (Parent) created:", result);
     console.log("User (Parent) created:", parentID);
 
+    
     /**
      * 2️⃣ Insert Students
      */

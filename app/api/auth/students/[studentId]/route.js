@@ -35,7 +35,7 @@ async function getStudentHandler(request, context) {
   }
 }
 
-// UPDATE student
+// UPDATE student 
 async function updateStudentHandler(request, context) {
   try {
     const studentId = context.params.studentId;

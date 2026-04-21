@@ -2,7 +2,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import ParentLayout from '@/component/parent/ParentLayout';
+import ParentLayout from '@/component/admin/AdminLayout';
 import '@/styles/admin.css';
 
 

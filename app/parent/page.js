@@ -1,10 +1,14 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { useSession } from "next-auth/react";
 import StatsCards from 'component/parent/StatsCards';
 
 export default function ParentHome() {
+
+  const { data: session } = useSession();
+
   const [stats, setStats] = useState({
-    totalRegistrations: 0
+    totalStudents: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -13,60 +17,26 @@ export default function ParentHome() {
     try {
       setLoading(true);
       setError('');
-      
-      // Initialize variables
-      let totalUsers = 0, adminUsers = 0, regularUsers = 0;
-      let totalRegistrations = 0;
-      const parentId = 13;
-      // Fetch users data
-      try {
-        const usersRes = await fetch(`/api/parent/students/count?parent_id=${parentId}`);
-        console.log("===== usersRes - students count :",usersRes);
-        if (usersRes.ok) {
-          const usersData = await usersRes.json();
 
-          if (usersData.success && usersData.users) {
-            totalUsers = usersData.users.length;
-            adminUsers = usersData.users.filter(u => [602, 603].includes(u.role_code)).length;
-            regularUsers = usersData.users.filter(u => u.role_code === 601).length;
-          }
-        }
-      } catch (usersError) {
-        console.error('Error fetching users:', usersError);
+      let totalStudents = 0;
+
+      const parentId = session?.user?.id;
+      console.log("Dashboard user:", session?.user);
+
+      const res = await fetch(`/api/parent/students/count?parent_id=${parentId}`);
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch students");
       }
 
-      // Fetch registrations data
-      try {
-        const registrationsRes = await fetch('/api/auth/registrations/');
-        if (registrationsRes.ok) {
-          const registrationsData = await registrationsRes.json();
-          console.log('Registrations API response:', registrationsData);
-          
-          if (registrationsData.success && registrationsData.registrations) {
-            totalRegistrations = registrationsData.registrations.length;
-          }
-        } else {
-          console.log('Registrations API not available or error:', registrationsRes.status);
-          // Don't treat this as an error since registrations API might not exist yet
-        }
-      } catch (registrationsError) {
-        console.log('Registrations API not available:', registrationsError.message);
-        // Don't treat this as an error since registrations API might not exist yet
+      const data = await res.json();
+
+      if (data.totalStudents !== undefined) {
+        totalStudents = data.totalStudents;
       }
 
-      // Update stats
       setStats({
-        totalUsers,
-        totalRegistrations,
-        adminUsers,
-        regularUsers
-      });
-
-      console.log('Final stats:', {
-        totalUsers,
-        totalRegistrations,
-        adminUsers,
-        regularUsers
+        totalStudents
       });
 
     } catch (error) {
@@ -78,8 +48,10 @@ export default function ParentHome() {
   };
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    if (session?.user?.id) {
+      fetchStats();
+    }
+  }, [session]);
 
   if (loading) {
     return (
