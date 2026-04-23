@@ -317,7 +317,7 @@ export default function ParentRegistrationPage() {
               </label>
               <PhoneInput
                 international
-                defaultCountry="IN" // change if needed
+                defaultCountry="US" // change if needed
                 value={parentData.phone}
                 onChange={(value) =>
                   setParentData({
@@ -340,7 +340,7 @@ export default function ParentRegistrationPage() {
               />
             </div>
             <div className="col-md-6 mb-3">
-              <label>Pincode</label>
+              <label>Zipcode</label>
               <input
                 type="text"
                 className="form-control"
@@ -479,13 +479,13 @@ export default function ParentRegistrationPage() {
               </div>
 
               <div className="mt-3 text-end">
-                <button
-                  type="button"
-                  className="btn btn-secondary me-2"
+                <span
+                  className="m-3"
                   onClick={() => setShowStudentForm(false)}
+                  style={{ color: "#6c757d", cursor: "pointer" }}
                 >
                   Cancel
-                </button>
+                </span>
 
                 <button
                   type="button"
@@ -551,16 +551,18 @@ export default function ParentRegistrationPage() {
                     Are you sure you want to delete student{" "}
                     <strong>{studentToDelete?.name}</strong>?
                   </p>
-                  <p>This action cannot be undone.</p>
+                  <p className="text-danger" style={{ fontSize: "13px" }}>
+                    This action cannot be undone.
+                  </p>
                 </div>
 
                 <div className="modal-footer">
-                  <button
-                    className="btn btn-secondary"
+                  <span
                     onClick={() => setShowDeleteModal(false)}
+                    style={{ color: "#6c757d", cursor: "pointer" }}
                   >
                     Cancel
-                  </button>
+                  </span>
 
                   <button
                     className="btn btn-danger"

@@ -342,13 +342,12 @@ export default function ParentStudentsPage() {
               </div>
 
               <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
+                <span
+                  style={{ color: "#6c757d", cursor: "pointer" }}
                   onClick={closeModal}
                 >
                   Cancel
-                </button>
+                </span>
 
                 <button
                   type="submit"

@@ -1,29 +1,30 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import StatsCards from 'component/parent/StatsCards';
+import StatsCards from "component/parent/StatsCards";
 
 export default function ParentHome() {
-
   const { data: session } = useSession();
 
   const [stats, setStats] = useState({
-    totalStudents: 0
+    totalStudents: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const fetchStats = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
       let totalStudents = 0;
 
       const parentId = session?.user?.id;
       console.log("Dashboard user:", session?.user);
 
-      const res = await fetch(`/api/parent/students/count?parent_id=${parentId}`);
+      const res = await fetch(
+        `/api/parent/students/count?parent_id=${parentId}`,
+      );
 
       if (!res.ok) {
         throw new Error("Failed to fetch students");
@@ -36,12 +37,11 @@ export default function ParentHome() {
       }
 
       setStats({
-        totalStudents
+        totalStudents,
       });
-
     } catch (error) {
-      console.error('Error fetching stats:', error);
-      setError('Failed to load dashboard data');
+      console.error("Error fetching stats:", error);
+      setError("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
@@ -71,10 +71,7 @@ export default function ParentHome() {
           <h1>Parent Dashboard</h1>
           <div className="alert alert-danger">
             {error}
-            <button 
-              className="btn btn-primary ml-2" 
-              onClick={fetchStats}
-            >
+            <button className="btn btn-primary ml-2" onClick={fetchStats}>
               Retry
             </button>
           </div>
@@ -87,9 +84,9 @@ export default function ParentHome() {
     <div className="admin-page">
       <div className="page-header">
         <h1>Dashboard</h1>
-        <p>Welcome to Sypher Parent Panel</p>
+        <p>Welcome to Sypher Parent Portal</p>
       </div>
-      
+
       <StatsCards stats={stats} />
     </div>
   );
